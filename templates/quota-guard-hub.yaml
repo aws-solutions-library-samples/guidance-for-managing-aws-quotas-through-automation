@@ -1,0 +1,121 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation Stack for Lambda based Quota Tracking and Alerting Solution on AWS for Multi-Account
+Parameters:
+  LambdaBucket:
+    Type: String
+    MinLength: '1'
+    AllowedPattern: '[a-zA-Z0-9-.]*'
+    Description: The prefix of the S3 bucket containing the Lambda package and templates.
+    Default: vod-anand78 
+  LambdaPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    Default: qg-templates/
+    Type: String
+  ConfigBucket:
+    Type: String
+    MinLength: '1'
+    AllowedPattern: '[a-zA-Z0-9-.]*'
+    Description: The prefix of the S3 bucket containing the Lambda package and templates.
+    Default: vod-anand78 
+  ConfigFile:
+    Type: String
+    MinLength: '1'
+    AllowedPattern: '[a-zA-Z0-9-.]*'
+    Description: The prefix of the S3 bucket containing the Lambda package and templates.
+    Default:  QuotaList.json
+  RegionList:
+    Type: String
+    MinLength: '1'
+    Description: List of AWS Regions to monitor quota of resources.
+    Default: us-east-1,us-east-2
+  OraganizationalUnits:
+    Type: String
+    MinLength: '1'
+    Description: List of OUs for which you want to monitor Quotas
+    Default: xxx  
+  AWSOrganizationId:
+    Type: String
+    MinLength: '1'
+    Description: Org Id for your AWS Organizations.
+    Default: xxx      
+  QuotaThresholdEventNotificationEmail:
+    Type: String
+    MinLength: '1'
+    Description: Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events
+Resources:
+  QuotaGuardEventRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "CrossAccountEventRule"
+      Name: QuotaGuardEventRule
+      EventPattern:
+        source:
+          - quota-guard
+        detail-type:
+          - quota-threshold-event
+      Targets: 
+        - Arn: !Ref QuotaThresholdSnsTopic
+          Id: "QuotaThresholdSNStopic"
+      State: "ENABLED"
+  CentralEventBusPolicy:
+      Type: AWS::Events::EventBusPolicy
+      Properties:
+        StatementId: 'AllowAllAccountsFromOrganizationToPutEvents'
+        Statement:
+          Effect: Allow
+          Principal: '*'
+          Action:
+            - 'events:PutEvents'
+          Resource: !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
+          Condition:
+            StringEquals:
+              aws:PrincipalOrgID: !Ref AWSOrganizationId
+  QuotaThresholdSnsTopic:
+    Type : AWS::SNS::Topic
+    Properties:
+        Subscription:
+          - Endpoint:  !Ref QuotaThresholdEventNotificationEmail
+            Protocol: "email"
+  # Allow EventBridge to invoke SNS
+  EventBridgeToToSnsPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties: 
+      PolicyDocument:
+        Statement:
+        - Effect: Allow
+          Principal:
+            Service: events.amazonaws.com
+          Action: sns:Publish
+          Resource: !Ref QuotaThresholdSnsTopic
+      Topics:
+        - !Ref QuotaThresholdSnsTopic
+  QuotaGuardSpokeStackSet:
+      Type: AWS::CloudFormation::StackSet
+      Properties:
+        StackSetName: 'QuotaGuardSpokeStackSet'
+        AutoDeployment:
+          Enabled: true
+          RetainStacksOnAccountRemoval: true
+        PermissionModel: SERVICE_MANAGED
+        Parameters:
+          - ParameterKey: 'CentralEventBusArn'
+            ParameterValue: !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
+          - ParameterKey: 'LambdaBucket'
+            ParameterValue: !Ref LambdaBucket
+          - ParameterKey: 'LambdaPrefix'
+            ParameterValue: !Ref LambdaPrefix  
+          - ParameterKey: 'ConfigBucket'
+            ParameterValue: !Ref ConfigBucket
+          - ParameterKey: 'ConfigFile'
+            ParameterValue: !Ref ConfigFile
+          - ParameterKey: 'RegionList'
+            ParameterValue: !Ref RegionList                          
+        StackInstancesGroup:
+          - Regions:
+              - !Ref 'AWS::Region'
+            DeploymentTargets:
+              OrganizationalUnitIds:
+                - !Ref OraganizationalUnits
+        Capabilities:
+          - CAPABILITY_NAMED_IAM
+        TemplateURL: 'https://vod-anand78.s3.amazonaws.com/qg-templates/quota-guard-spoke.yaml'

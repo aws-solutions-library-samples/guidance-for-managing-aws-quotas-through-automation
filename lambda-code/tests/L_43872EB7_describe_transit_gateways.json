@@ -1,0 +1,7 @@
+[{
+    "TransitGateways": [
+        {
+            "TransitGatewayId": "string"
+        }
+    ]
+}]

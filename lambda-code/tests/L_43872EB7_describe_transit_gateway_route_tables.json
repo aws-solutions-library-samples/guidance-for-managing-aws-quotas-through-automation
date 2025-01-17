@@ -1,0 +1,19 @@
+{
+    "TransitGatewayRouteTables": [
+        {
+            "TransitGatewayRouteTableId": "string"
+        },
+        {
+            "TransitGatewayRouteTableId": "string"
+        },
+        {
+            "TransitGatewayRouteTableId": "string"
+        },
+        {
+            "TransitGatewayRouteTableId": "string"
+        },
+        {
+            "TransitGatewayRouteTableId": "string"
+        }
+    ]
+}

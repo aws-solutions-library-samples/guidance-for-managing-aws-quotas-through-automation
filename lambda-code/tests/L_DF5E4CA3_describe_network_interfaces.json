@@ -1,0 +1,76 @@
+[{
+    "NetworkInterfaces": [
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        },
+        {
+            "Description": "string",
+            "NetworkInterfaceId": "string"
+        }
+    ]
+}]

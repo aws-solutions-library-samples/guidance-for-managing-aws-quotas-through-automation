@@ -1,0 +1,68 @@
+[
+    {
+        "ServiceCode":"ebs",
+        "QuotaCode": "L-D18FCD1D",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"vpc",
+        "QuotaCode": "L-DF5E4CA3",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"ec2",
+        "QuotaCode": "L-43872EB7",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"vpc",
+        "QuotaCode": "L-1B52E74A",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"ec2",
+        "QuotaCode": "L-C4B238BF",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"vpc",
+        "QuotaCode": "L-BB24F6E5",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"vpc",
+        "QuotaCode": "L-DFA99DE7",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    }, 
+    {
+        "ServiceCode":"elasticloadbalancing",
+        "QuotaCode": "L-CE3125E5",
+        "QuotaAppliedAtLevel" : "Regional",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"s3",
+        "QuotaCode": "L-DC2B2D3D",
+        "QuotaAppliedAtLevel" : "Global",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"iam",
+        "QuotaCode": "L-0DA4ABF3",
+        "QuotaAppliedAtLevel" : "Global",
+        "Threshold" : "80"
+    },
+    {
+        "ServiceCode":"iam",
+        "QuotaCode": "L-BF35879D",
+        "QuotaAppliedAtLevel" : "Global",
+        "Threshold" : "80"
+    }                
+]

@@ -1,0 +1,10 @@
+{
+    "Vpcs": [
+        {
+            "VpcId": "vpc-test11111test"
+        },
+        {
+            "VpcId": "vpc-test22222test"
+        }
+    ]
+}

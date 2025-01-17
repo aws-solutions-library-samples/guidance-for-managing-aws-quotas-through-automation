@@ -1,0 +1,7 @@
+
+for (( i=1 ; i<=$2 ; i++ ));
+do
+    echo $i
+    rtblValue="TGW1-RTBL"$i
+    aws ec2 create-transit-gateway-route-table --transit-gateway-id $1 --tag-specifications '[{"ResourceType": "transit-gateway-route-table","Tags":[{"Key":"Name",  "Value": "'$rtblValue'"} ] }]'
+done

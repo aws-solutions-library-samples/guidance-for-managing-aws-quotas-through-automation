@@ -1,0 +1,326 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: CloudFormation Stack for Spoke Account Lambda based Quota Tracking and Alerting Solution on AWS
+Parameters:
+  LambdaBucket:
+    Type: String
+    MinLength: '1'
+    AllowedPattern: '[a-zA-Z0-9-.]*'
+    Description: The prefix of the S3 bucket containing the Lambda package and templates.
+    Default: vod-anand78 
+  LambdaPrefix:
+    AllowedPattern: ^[0-9a-zA-Z-/]*$
+    Default: qg-templates/
+    Type: String
+  ConfigBucket:
+    Type: String
+    MinLength: '1'
+    AllowedPattern: '[a-zA-Z0-9-.]*'
+    Description: The prefix of the S3 bucket containing the Lambda package and templates.
+    Default: vod-anand78 
+  ConfigFile:
+    Type: String
+    MinLength: '1'
+    AllowedPattern: '[a-zA-Z0-9-.]*'
+    Description: The prefix of the S3 bucket containing the Lambda package and templates.
+    Default:  QuotaList.json
+  RegionList:
+    Type: String
+    MinLength: '1'
+    Description: List of AWS Regions to monitor quota of resources.
+    Default: us-east-1,us-east-2
+  CentralEventBusArn:
+    Type: String
+    MinLength: '1'
+    Description: EventBusArn for receiving the Quota Threshold Exceeded notification
+  ExecutionTimeInCron:
+    Type: String
+    MinLength: '1'
+    Description: Cron Expression to specify the schedule for pulling usage data and performing threshold checks. For Cron Expression Syntax refer https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html#eb-cron-expressions
+    Default: 0/10 * * * ? *        
+Resources:
+  QuotaGuardDDBTable:
+    Type: 'AWS::DynamoDB::Table'
+    Properties:
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: QuotaCode
+          AttributeType: S
+      KeySchema:
+        - AttributeName: QuotaCode
+          KeyType: HASH
+  QuotaGuardLambdaInvokePermission:
+    Type: 'AWS::Lambda::Permission'
+    Properties:
+      Action: 'lambda:InvokeFunction'
+      FunctionName: !Ref QuotaGuardLambda
+      Principal: events.amazonaws.com
+  QuotaGuardLambda:
+    Type: 'AWS::Lambda::Function'
+    Properties:
+      FunctionName: "QuotaGuardLambda"
+      Description: Function to handle Quota Reporting
+      Handler: index.lambda_handler
+      Role: !GetAtt 
+        - QuotaGuardLambdaRole
+        - Arn
+      Code:
+        S3Bucket: !Ref 'LambdaZipsBucket'
+        S3Key: !Sub '${LambdaPrefix}quota_guard_1.0.0.zip'
+      Runtime: python3.8
+      MemorySize: 128
+      Timeout: 300
+      Environment:
+        Variables:
+          MASTER_ACCOUNT: !Ref 'AWS::AccountId'
+          QUOTALIST_FILE: !Ref 'ConfigFile'
+          SERVICEQUOTA_BUCKET: !Ref 'ConfigBucket'
+          DDB_TABLE: !Ref QuotaGuardDDBTable         
+          REGION_LIST: !Ref RegionList
+          EVENT_BUS: !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
+    DependsOn:
+      - CopyZips
+  QuotaGuardLambdaRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Description: Role used by Lambda for life cycle / new account creation
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - lambda.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+            Condition:
+              StringEquals:
+                aws:SourceArn: 
+                  - !Sub 'arn:${AWS::Partition}:lambda:${AWS::Region}:${AWS::AccountId}:function:QuotaGuardLambda'
+      Path: /
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Policies:
+        - PolicyName: LambdaPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: S3Operations
+                Effect: Allow
+                Action:
+                  - 's3:GetObject'
+                Resource: 
+                  - !Join ['',['arn:aws:s3:::', !Ref LambdaZipsBucket ,'*']]
+                  - !Join ['',['arn:aws:s3:::', !Ref ConfigBucket ,'*']]
+              - Sid: S3QuotaCheckOperations
+                Effect: Allow
+                Action:
+                  - 's3:ListBuckets'
+                  - 's3:ListAllMyBuckets'
+                Resource: 
+                  - '*'                  
+              - Sid: VPCEC2QuotaCheckOperations
+                Effect: Allow
+                Action:
+                  - 'ec2:DescribeVpcEndpoints'
+                  - 'ec2:DescribeTransitGateways'
+                  - 'ec2:DescribeTransitGatewayRouteTables'
+                  - 'ec2:DescribeVolumes'
+                  - 'ec2:DescribeNetworkInterfaces'
+                  - 'ec2:DescribeClientVpnEndpoints'
+                  - 'ec2:DescribeNatGateways'
+                  - 'elasticloadbalancing:DescribeLoadBalancers'
+                  - 'elasticloadbalancing:DescribeTargetGroups'
+                  - 'ec2:DescribeVpcs'
+                  - 'ec2:DescribeVpnConnections'
+                Resource: 
+                  - '*'                                    
+              - Sid: ELBQuotaCheckOperations
+                Effect: Allow
+                Action:
+                  - 'elasticloadbalancing:DescribeLoadBalancers'
+                Resource: 
+                  - '*'                                                      
+              - Sid: DynamoDbOperations
+                Effect: Allow
+                Action:
+                  - 'dynamodb:PutItem'
+                Resource: 
+                  - !Sub 'arn:${AWS::Partition}:dynamodb:${AWS::Region}:${AWS::AccountId}:table/${QuotaGuardDDBTable}'
+              - Sid: EventBridgeOperations
+                Effect: Allow
+                Action:
+                  - 'events:PutEvents'
+                Resource: 
+                  - '*'                  
+              - Sid: ServiceQuotaOperations
+                Effect: Allow
+                Action:
+                  - 'servicequotas:GetServiceQuota'
+                  - 'servicequotas:GetAWSDefaultServiceQuota'
+                Resource: 
+                  - '*'                  
+              - Sid: CloudWatchOperations
+                Effect: Allow
+                Action:
+                  - 'cloudwatch:GetMetricStatistics'
+                Resource: 
+                  - '*'                  
+              - Sid: IAMOperations
+                Effect: Allow
+                Action:
+                  - 'iam:ListAttachedRolePolicies'
+                  - 'iam:ListRoles'
+                  - 'iam:ListServerCertificates'
+                Resource: 
+                  - '*'                  
+  QuotaGuardEventRule: 
+    Type: AWS::Events::Rule
+    Properties: 
+      Description: "ScheduledRule"
+      Name: QuotaGuardEventRule      
+      ScheduleExpression: !Sub 'cron(${ExecutionTimeInCron})'
+      State: "ENABLED"
+      Targets:
+        - Arn: !GetAtt QuotaGuardLambda.Arn
+          Id: QGLambda
+    DependsOn: QuotaGuardLambdaInvokePermission
+  CrossAccountEventBusRole:
+    Type: 'AWS::IAM::Role'
+    Properties:
+      Description: Role used by Lambda which handles the privatelink notifications
+      AssumeRolePolicyDocument:
+        Version: 2012-10-17
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service:
+                - events.amazonaws.com
+            Action:
+              - 'sts:AssumeRole'
+      Path: /
+      Policies:
+        - PolicyName: CrossAccountEventBusPolicy
+          PolicyDocument:
+            Version: 2012-10-17
+            Statement:
+              - Sid: EventBusOperations
+                Effect: Allow
+                Action:
+                  - events:PutEvents
+                Resource:
+                  - !Ref CentralEventBusArn    
+  CrossAccountQuotaEventRule:
+    Type: AWS::Events::Rule
+    Properties:
+      EventBusName: default
+      EventPattern:
+        source:
+          - quota-guard
+        detail-type:
+          - quota-threshold-event
+      Name: CrossAccountQuotaEventRule
+      State: ENABLED
+      Targets:
+        - Id: Idfd225107-2368-439d-845c-c5c54f481512
+          Arn: !Ref CentralEventBusArn
+          RoleArn: !GetAtt
+            - CrossAccountEventBusRole
+            - Arn
+  LambdaZipsBucket:
+    Type: AWS::S3::Bucket
+  CopyZips:
+    Type: Custom::CopyZips
+    Properties:
+      ServiceToken: !GetAtt 'CopyZipsFunction.Arn'
+      DestBucket: !Ref 'LambdaZipsBucket'
+      SourceBucket: !Ref 'LambdaBucket'
+      Prefix: !Ref 'LambdaPrefix'
+      Objects:
+        - quota_guard_1.0.0.zip
+  CopyZipsRole:
+    Type: AWS::IAM::Role
+    Properties:
+      AssumeRolePolicyDocument:
+        Version: '2012-10-17'
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: lambda.amazonaws.com
+            Action: sts:AssumeRole
+      ManagedPolicyArns:
+        - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+      Path: /
+      Policies:
+        - PolicyName: lambda-copier
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - s3:GetObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${LambdaBucket}/${LambdaPrefix}*'
+              - Effect: Allow
+                Action:
+                  - s3:PutObject
+                  - s3:DeleteObject
+                Resource:
+                  - !Sub 'arn:aws:s3:::${LambdaZipsBucket}/${LambdaPrefix}*'
+  CopyZipsFunction:
+    Type: AWS::Lambda::Function
+    Properties:
+      Description: Copies objects from a source S3 bucket to a destination
+      Handler: index.handler
+      Runtime: python3.8
+      Role: !GetAtt 'CopyZipsRole.Arn'
+      Timeout: 240
+      Code:
+        ZipFile: |
+          import json
+          import logging
+          import threading
+          import boto3
+          import cfnresponse
+          def copy_objects(source_bucket, dest_bucket, prefix, objects):
+              s3 = boto3.client('s3')
+              for o in objects:
+                  key = prefix + o
+                  copy_source = {
+                      'Bucket': source_bucket,
+                      'Key': key
+                  }
+                  print('copy_source: %s' % copy_source)
+                  print('dest_bucket = %s'%dest_bucket)
+                  print('key = %s' %key)
+                  s3.copy_object(CopySource=copy_source, Bucket=dest_bucket,
+                        Key=key)
+          def delete_objects(bucket, prefix, objects):
+              s3 = boto3.client('s3')
+              objects = {'Objects': [{'Key': prefix + o} for o in objects]}
+              s3.delete_objects(Bucket=bucket, Delete=objects)
+          def timeout(event, context):
+              logging.error('Execution is about to time out, sending failure response to CloudFormation')
+              cfnresponse.send(event, context, cfnresponse.FAILED, {}, None)
+          def handler(event, context):
+              # make sure we send a failure to CloudFormation if the function
+              # is going to timeout
+              timer = threading.Timer((context.get_remaining_time_in_millis()
+                        / 1000.00) - 0.5, timeout, args=[event, context])
+              timer.start()
+              print('Received event: %s' % json.dumps(event))
+              status = cfnresponse.SUCCESS
+              try:
+                  source_bucket = event['ResourceProperties']['SourceBucket']
+                  dest_bucket = event['ResourceProperties']['DestBucket']
+                  prefix = event['ResourceProperties']['Prefix']
+                  objects = event['ResourceProperties']['Objects']
+                  if event['RequestType'] == 'Delete':
+                      delete_objects(dest_bucket, prefix, objects)
+                  else:
+                      copy_objects(source_bucket, dest_bucket, prefix, objects)
+              except Exception as e:
+                  logging.error('Exception: %s' % e, exc_info=True)
+                  status = cfnresponse.FAILED
+              finally:
+                  timer.cancel()
+                  cfnresponse.send(event, context, status, {}, None)    

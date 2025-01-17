@@ -1,0 +1,27 @@
+[{
+    "Roles": [
+        {
+            "Path": "string",
+            "RoleName": "string",
+            "RoleId": "string",
+            "Arn": "string",
+            "AssumeRolePolicyDocument": "string",
+            "Description": "string",
+            "MaxSessionDuration": 123,
+            "PermissionsBoundary": {
+                "PermissionsBoundaryType": "PermissionsBoundaryPolicy",
+                "PermissionsBoundaryArn": "string"
+            },
+            "Tags": [
+                {
+                    "Key": "string",
+                    "Value": "string"
+                }
+            ],
+            "RoleLastUsed": {
+                "Region": "string"
+            }
+        }
+    ],
+    "Marker": "string"
+}]

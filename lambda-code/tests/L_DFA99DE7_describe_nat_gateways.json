@@ -1,0 +1,209 @@
+[
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    },
+    {
+        "NatGatewayAddresses": [
+            {
+                "PrivateIp": "192.168.0.1",
+                "PublicIp": "1.1.0.1"
+            }
+        ],
+        "NatGatewayId": "TEST"
+    }
+]

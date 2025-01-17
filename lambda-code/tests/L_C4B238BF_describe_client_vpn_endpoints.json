@@ -1,0 +1,13 @@
+[
+    {
+        "ClientVpnEndpoints": [
+            {
+                "ClientVpnEndpointId": "TEST"   
+            },{
+                "ClientVpnEndpointId": "TEST2"   
+            },{
+                "ClientVpnEndpointId": "TEST3"   
+            }
+        ]
+    }
+]

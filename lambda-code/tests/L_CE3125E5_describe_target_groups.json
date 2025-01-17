@@ -1,0 +1,7 @@
+{
+    "TargetGroups": [
+        {
+            "TargetGroupArn": "string"
+        }
+    ]
+}

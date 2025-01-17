@@ -1,0 +1,29 @@
+{
+    "AttachedPolicies": [
+        {
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        },{
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        },{
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        },{
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        },{
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        },{
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        },{
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        },{
+            "PolicyName": "test",
+            "PolicyArn": "test"
+        }
+    ]
+}

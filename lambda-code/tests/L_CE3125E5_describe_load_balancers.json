@@ -1,0 +1,21 @@
+[{
+    "LoadBalancerDescriptions": [
+        {
+            "LoadBalancerName": "string",
+            "Instances": [
+                {
+                    "InstanceId": "string"
+                },
+                {
+                    "InstanceId": "string"
+                },
+                {
+                    "InstanceId": "string"
+                },
+                {
+                    "InstanceId": "string"
+                }
+            ]
+        }
+    ]
+}]
