@@ -132,12 +132,13 @@ If you are using IAM Identity Center you can create and use your SSO profile as 
 5. Use this CloudFormation template ***quota-guard-single-account.yaml*** from the S3 bucket to deploy the solution. CloudFormation stacks are deployed using the console as explained in the documentation through [console](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html) or [CLI.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html)
 6. Provide  the required parameters -
 
-    * ConfigBucket - The prefix of the S3 bucket containing the lambda package and templates
-    * Configfile - JSON Config file name for QuotaGuard configuration
-    * LambdaBucket - The prefix of the S3 bucket containing the lambda package and templates
-    * LambdaPrefix - (qg-templates) - S3 prefix for Lambda package
-    * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events
+    * ConfigBucket - The prefix of the S3 bucket containing the lambda package and templates.
+    * Configfile - JSON Config file name for QuotaGuard configuration.
+    * LambdaBucket - The prefix of the S3 bucket containing the lambda package and templates.
+    * LambdaPrefix - (qg-templates) - S3 prefix for Lambda package.
+    * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events.
     * RegionList - List of AWS Regions to monitor quota of resources.
+    * ExecutionTimeInCron - Cron Expression to specify the schedule for pulling usage data and performing threshold checks. 
 7. Deploy  the stack
 
 
@@ -164,16 +165,18 @@ If you are using IAM Identity Center you can create and use your SSO profile as 
     5.1. Use this CloudFormation template ***quota-guard-hub.yaml*** from the S3 bucket to deploy the solution. CloudFormation stacks are deployed using the console as explained in the documentation through [console](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html) or [CLI.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html)
     
     5.2. Provide  the required parameters - 
-        * AWSOrganizationId - Organization Id for your AWS Organizations.
-        * ConfigBucket - S3 bucket containing the Lambda package and templates.
-        * ConfigFile - S3 bucket containing the Lambda package and templates.
-        * LambdaBucket - S3 bucket containing the Lambda package and templates.
-        * LambdaPrefix - The prefix of the S3 bucket containing the Lambda package and templates.
-        * OrganizationalUnits - List of OUs for which you want to monitor Quotas
-        * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events
-        * RegionList - List of AWS Regions to monitor quota of resources.
 
-6. The  Spoke Stack will be automatically deployed to member accounts via  StackSets in provided OrganizationalUnits
+   * AWSOrganizationId - Organization Id for your AWS Organizations.
+   * ConfigBucket - S3 bucket containing the Lambda package and templates.
+   * ConfigFile - S3 bucket containing the Lambda package and templates.
+   * LambdaBucket - S3 bucket containing the Lambda package and templates.
+   * LambdaPrefix - The prefix of the S3 bucket containing the Lambda package and templates.
+   * OrganizationalUnits - List of OUs for which you want to monitor Quotas.
+   * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events.
+   * RegionList - List of AWS Regions to monitor quota of resources.
+   * ExecutionTimeInCron - Cron Expression to specify the schedule for pulling usage data and performing threshold checks.
+
+7. The  Spoke Stack will be automatically deployed to member accounts via  StackSets in provided OrganizationalUnits
 
 
 ##
