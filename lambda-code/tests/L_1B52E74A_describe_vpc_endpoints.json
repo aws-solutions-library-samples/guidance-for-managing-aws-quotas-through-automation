@@ -24,6 +24,46 @@
             {
                 "VpcEndpointId": "string",
                 "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
+            },
+            {
+                "VpcEndpointId": "string",
+                "VpcEndpointType": "Gateway"
             }
         ]
     }

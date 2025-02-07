@@ -6,7 +6,7 @@ Parameters:
     MinLength: '1'
     AllowedPattern: '[a-zA-Z0-9-.]*'
     Description: The prefix of the S3 bucket containing the Lambda package and templates.
-    Default: vod-anand78 
+    Default: BUCKET-NAME 
   LambdaPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     Default: qg-templates/
@@ -16,7 +16,7 @@ Parameters:
     MinLength: '1'
     AllowedPattern: '[a-zA-Z0-9-.]*'
     Description: The prefix of the S3 bucket containing the Lambda package and templates.
-    Default: vod-anand78 
+    Default: BUCKET-NAME
   ConfigFile:
     Type: String
     MinLength: '1'
@@ -118,4 +118,4 @@ Resources:
                 - !Ref OraganizationalUnits
         Capabilities:
           - CAPABILITY_NAMED_IAM
-        TemplateURL: 'https://vod-anand78.s3.amazonaws.com/qg-templates/quota-guard-spoke.yaml'
+        TemplateURL: !Sub 'https://${LambdaBucket}.s3.amazonaws.com/qe-templates/quota-guard-spoke.yaml' 

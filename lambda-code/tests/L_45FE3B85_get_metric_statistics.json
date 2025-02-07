@@ -8,6 +8,9 @@
         {
             "Timestamp": "2",
             "Maximum": 210.0
-        }
+        },
+        {
+            "Timestamp": "3",
+            "Maximum": 51200.0
     ]
 }

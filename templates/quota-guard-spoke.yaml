@@ -6,7 +6,7 @@ Parameters:
     MinLength: '1'
     AllowedPattern: '[a-zA-Z0-9-.]*'
     Description: The prefix of the S3 bucket containing the Lambda package and templates.
-    Default: vod-anand78 
+    Default: BUCKET-NAME 
   LambdaPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     Default: qg-templates/
@@ -16,7 +16,7 @@ Parameters:
     MinLength: '1'
     AllowedPattern: '[a-zA-Z0-9-.]*'
     Description: The prefix of the S3 bucket containing the Lambda package and templates.
-    Default: vod-anand78 
+    Default: BUCKET-NAME
   ConfigFile:
     Type: String
     MinLength: '1'
@@ -255,6 +255,11 @@ Resources:
           PolicyDocument:
             Version: '2012-10-17'
             Statement:
+              - Effect: Allow
+                Action:
+                  - s3:ListBucket
+                Resource:
+                  - !Sub 'arn:aws:s3:::${LambdaBucket}'
               - Effect: Allow
                 Action:
                   - s3:GetObject

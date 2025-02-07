@@ -2,6 +2,15 @@
     "TransitGateways": [
         {
             "TransitGatewayId": "string"
+        },
+        {
+            "TransitGatewayId": "string"
+        },
+        {
+            "TransitGatewayId": "string"
+        },
+        {
+            "TransitGatewayId": "string"
         }
     ]
 }]

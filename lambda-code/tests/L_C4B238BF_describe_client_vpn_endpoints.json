@@ -6,6 +6,8 @@
             },{
                 "ClientVpnEndpointId": "TEST2"   
             },{
+                "ClientVpnEndpointId": "TEST2"   
+            },{
                 "ClientVpnEndpointId": "TEST3"   
             }
         ]
