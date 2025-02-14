@@ -2,7 +2,7 @@
 function show_usage() {
     echo "Usage: $0 [OPTIONS]"
     echo
-    echo "Deploy CloudFormation stack for Quota Monitor Extensions"
+    echo "Deploy CloudFormation stack for Quota Guard"
     echo
     echo "Required Parameters:"
     echo "  -p, --profile     AWS CLI profile name"
@@ -92,12 +92,12 @@ else
 fi
 
 # Create CloudFormation stack with selected template
-aws cloudformation create-stack \
-    --stack-name QMExtensionsStack \
-    --template-url https://$BUCKET_NAME.s3.amazonaws.com/qg-templates/$TEMPLATE_NAME \
-    --capabilities CAPABILITY_IAM \
-    --parameters \
-        ParameterKey=LambdaBucket,ParameterValue=$BUCKET_NAME \
-        ParameterKey=ConfigBucket,ParameterValue=$BUCKET_NAME \
-        ParameterKey=QuotaThresholdEventNotificationEmail,ParameterValue=$EMAIL_ADDRESS \
-    --profile $PROFILE
+#aws cloudformation create-stack \
+#    --stack-name QMExtensionsStack \
+#    --template-url https://$BUCKET_NAME.s3.amazonaws.com/qg-templates/$TEMPLATE_NAME \
+#    --capabilities CAPABILITY_IAM \
+#    --parameters \
+#        ParameterKey=LambdaBucket,ParameterValue=$BUCKET_NAME \
+#        ParameterKey=ConfigBucket,ParameterValue=$BUCKET_NAME \
+#        ParameterKey=QuotaThresholdEventNotificationEmail,ParameterValue=$EMAIL_ADDRESS \
+#    --profile $PROFILE

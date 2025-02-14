@@ -1,22 +1,16 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: CloudFormation Stack for Single Account Lambda based Quota Tracking and Alerting Solution on AWS
 Parameters:
-  LambdaBucket:
+  DeploymentBucket:
     Type: String
     MinLength: '1'
     AllowedPattern: '[a-zA-Z0-9-.]*'
-    Description: The prefix of the S3 bucket containing the Lambda package and templates.
+    Description: The name of the S3 bucket containing the Lambda package and templates.
     Default: BUCKET-NAME 
-  LambdaPrefix:
+  DeploymentBucketPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     Default: qg-templates/
     Type: String
-  ConfigBucket:
-    Type: String
-    MinLength: '1'
-    AllowedPattern: '[a-zA-Z0-9-.]*'
-    Description: The prefix of the S3 bucket containing the Lambda package and templates.
-    Default: BUCKET-NAME
   ConfigFile:
     Type: String
     MinLength: '1'
@@ -65,7 +59,7 @@ Resources:
         - Arn
       Code:
         S3Bucket: !Ref 'LambdaZipsBucket'
-        S3Key: !Sub '${LambdaPrefix}quota_guard_1.0.0.zip'
+        S3Key: !Sub '${DeploymentBucketPrefix}quota_guard_1.0.0.zip'
       Runtime: python3.8
       MemorySize: 128
       Timeout: 300
@@ -73,7 +67,7 @@ Resources:
         Variables:
           MASTER_ACCOUNT: !Ref 'AWS::AccountId'
           QUOTALIST_FILE: !Ref 'ConfigFile'
-          SERVICEQUOTA_BUCKET: !Ref 'ConfigBucket'
+          SERVICEQUOTA_BUCKET: !Ref 'DeploymentBucket'
           DDB_TABLE: !Ref QuotaGuardDDBTable         
           REGION_LIST: !Ref RegionList
           EVENT_BUS: !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
@@ -110,7 +104,7 @@ Resources:
                   - 's3:GetObject'
                 Resource: 
                   - !Join ['',['arn:aws:s3:::', !Ref LambdaZipsBucket ,'*']]
-                  - !Join ['',['arn:aws:s3:::', !Ref ConfigBucket ,'*']]
+                  - !Join ['',['arn:aws:s3:::', !Ref DeploymentBucket ,'*']]
               - Sid: S3QuotaCheckOperations
                 Effect: Allow
                 Action:
@@ -224,8 +218,8 @@ Resources:
     Properties:
       ServiceToken: !GetAtt 'CopyZipsFunction.Arn'
       DestBucket: !Ref 'LambdaZipsBucket'
-      SourceBucket: !Ref 'LambdaBucket'
-      Prefix: !Ref 'LambdaPrefix'
+      SourceBucket: !Ref 'DeploymentBucket'
+      Prefix: !Ref 'DeploymentBucketPrefix'
       Objects:
         - quota_guard_1.0.0.zip
   CopyZipsRole:
@@ -250,18 +244,18 @@ Resources:
                 Action:
                   - s3:ListBucket
                 Resource:
-                  - !Sub 'arn:aws:s3:::${LambdaBucket}'
+                  - !Sub 'arn:aws:s3:::${DeploymentBucket}'
               - Effect: Allow
                 Action:
                   - s3:GetObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${LambdaBucket}/${LambdaPrefix}*'
+                  - !Sub 'arn:aws:s3:::${DeploymentBucket}/${DeploymentBucketPrefix}*'
               - Effect: Allow
                 Action:
                   - s3:PutObject
                   - s3:DeleteObject
                 Resource:
-                  - !Sub 'arn:aws:s3:::${LambdaZipsBucket}/${LambdaPrefix}*'
+                  - !Sub 'arn:aws:s3:::${LambdaZipsBucket}/${DeploymentBucketPrefix}*'
   CopyZipsFunction:
     Type: AWS::Lambda::Function
     Properties:

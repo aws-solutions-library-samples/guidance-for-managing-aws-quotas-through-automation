@@ -1,22 +1,16 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: CloudFormation Stack for Lambda based Quota Tracking and Alerting Solution on AWS for Multi-Account
 Parameters:
-  LambdaBucket:
+  DeploymentBucket:
     Type: String
     MinLength: '1'
     AllowedPattern: '[a-zA-Z0-9-.]*'
     Description: The prefix of the S3 bucket containing the Lambda package and templates.
     Default: BUCKET-NAME 
-  LambdaPrefix:
+  DeploymentBucketPrefix:
     AllowedPattern: ^[0-9a-zA-Z-/]*$
     Default: qg-templates/
     Type: String
-  ConfigBucket:
-    Type: String
-    MinLength: '1'
-    AllowedPattern: '[a-zA-Z0-9-.]*'
-    Description: The prefix of the S3 bucket containing the Lambda package and templates.
-    Default: BUCKET-NAME
   ConfigFile:
     Type: String
     MinLength: '1'
@@ -100,12 +94,10 @@ Resources:
         Parameters:
           - ParameterKey: 'CentralEventBusArn'
             ParameterValue: !Sub 'arn:${AWS::Partition}:events:${AWS::Region}:${AWS::AccountId}:event-bus/default'
-          - ParameterKey: 'LambdaBucket'
-            ParameterValue: !Ref LambdaBucket
-          - ParameterKey: 'LambdaPrefix'
-            ParameterValue: !Ref LambdaPrefix  
-          - ParameterKey: 'ConfigBucket'
-            ParameterValue: !Ref ConfigBucket
+          - ParameterKey: 'DeploymentBucket'
+            ParameterValue: !Ref DeploymentBucket
+          - ParameterKey: 'DeploymentBucketPrefix'
+            ParameterValue: !Ref DeploymentBucketPrefix  
           - ParameterKey: 'ConfigFile'
             ParameterValue: !Ref ConfigFile
           - ParameterKey: 'RegionList'
@@ -118,4 +110,4 @@ Resources:
                 - !Ref OraganizationalUnits
         Capabilities:
           - CAPABILITY_NAMED_IAM
-        TemplateURL: !Sub 'https://${LambdaBucket}.s3.amazonaws.com/qe-templates/quota-guard-spoke.yaml' 
+        TemplateURL: !Sub 'https://${DeploymentBucket}.s3.amazonaws.com/${DeploymentBucketPrefix}quota-guard-spoke.yaml' 

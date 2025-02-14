@@ -115,27 +115,31 @@ The Multi-Account model uses a hub-and-spoke architecture to monitor quotas acro
 For single account setup,
 
 1. Clone / Copy github Repo (add repo link)
-2. Create a S3 bucket for the solution resources 
-3. Configure your AWS credentials for AWS CLI as mentioned in the document “[Authenticating using IAM user credentials for the AWS CLI](https://docs.aws.amazon.com/cli/v1/userguide/cli-authentication-user.html)”. 
-4. Upload the resources to this S3 bucket using the below command
+2. Create a S3 bucket for the solution resources and create a folder named "qg-templates" in the bucket
+3. Create  your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) upload the resources to this S3 bucket using the below command
+4. Use the below command to upload resources to the bucket and deploy the stack
+  ```./deploy.sh -h```
+  ```Usage: $0 [OPTIONS]```
+ 
+  ```Deploy CloudFormation stack for Quota Guard```
+  ```Required Parameters:```
+  ```  -p, --profile     AWS CLI profile name```
+  ```  -b, --bucket      S3 bucket name for deployment```
+  ```  -t, --type        Account type (single or multi)```
+  ```  -e, --email       Email address for notifications```
+  ```  Example:```
+  ```   $0 --profile myprofile --bucket my-bucket-name --type multi --email user@example.com```
+  ```   $0 -p myprofile -b my-bucket-name -t single -e user@example.com```
 
-    ```./deploy.sh``` 
 
-OR
-
-
-If you are using IAM Identity Center you can create and use your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) upload the resources to this S3 bucket using the below command
-
-  ```./deploy.sh —profile <sso-profile-name>```
 
 
 5. Use this CloudFormation template ***quota-guard-single-account.yaml*** from the S3 bucket to deploy the solution. CloudFormation stacks are deployed using the console as explained in the documentation through [console](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html) or [CLI.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html)
 6. Provide  the required parameters -
 
-    * ConfigBucket - The prefix of the S3 bucket containing the lambda package and templates.
     * Configfile - JSON Config file name for QuotaGuard configuration.
-    * LambdaBucket - The prefix of the S3 bucket containing the lambda package and templates.
-    * LambdaPrefix - (qg-templates) - S3 prefix for Lambda package.
+    * DeploymentBucket - The name of the S3 bucket containing the lambda package and templates.
+    * DeploymentBucketPrefix - (qg-templates) - S3 prefix for Lambda package.
     * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events.
     * RegionList - List of AWS Regions to monitor quota of resources.
     * ExecutionTimeInCron - Cron Expression to specify the schedule for pulling usage data and performing threshold checks. 
@@ -148,7 +152,25 @@ If you are using IAM Identity Center you can create and use your SSO profile as 
 For multi-account setups: 
 
 1. Clone / Copy github Repo (add repo link)
-2. Create a S3 bucket for the solution resources 
+2. Create a S3 bucket for the solution resources and create a folder named "qg-templates" in the bucket
+3. Give access to your AWS Organization to the S3 bucket by specifying the following Policy
+  ```{```
+```    "Version": "2012-10-17",```
+```    "Statement": [{```
+```        "Sid": "AllowGetObject",```
+```        "Principal": {```
+```            "AWS": "*"```
+```        },```
+```        "Effect": "Allow",```
+```        "Action": "s3:GetObject",```
+```        "Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",```
+```        "Condition": {```
+```            "StringEquals": {```
+```                "aws:PrincipalOrgID": ["o-aa111bb222"]```
+```            }```
+```        }```
+```    }]```
+```}```
 3. Configure your AWS credentials for AWS CLI as mentioned in the document “[Authenticating using IAM user credentials for the AWS CLI](https://docs.aws.amazon.com/cli/v1/userguide/cli-authentication-user.html)”. 
 4. upload the resources to this S3 bucket using the below command
 
@@ -167,10 +189,9 @@ If you are using IAM Identity Center you can create and use your SSO profile as 
     5.2. Provide  the required parameters - 
 
    * AWSOrganizationId - Organization Id for your AWS Organizations.
-   * ConfigBucket - S3 bucket containing the Lambda package and templates.
-   * ConfigFile - S3 bucket containing the Lambda package and templates.
-   * LambdaBucket - S3 bucket containing the Lambda package and templates.
-   * LambdaPrefix - The prefix of the S3 bucket containing the Lambda package and templates.
+   * ConfigFile - JSON Config file name for QuotaGuard configuration.
+   * DeploymentBucket - S3 bucket containing the Lambda package and templates.
+   * DeploymentBucketPrefix - The prefix of the S3 bucket containing the Lambda package and templates.
    * OrganizationalUnits - List of OUs for which you want to monitor Quotas.
    * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events.
    * RegionList - List of AWS Regions to monitor quota of resources.
@@ -278,9 +299,3 @@ This solution relies on serverless components such as **AWS Lambda**, **DynamoDB
 
 
 
-
-### Appendix
-
-#### Image Source
-
-[QuotaGuard-multiaccount-ver02.drawio](https://gitlab.aws.dev/anandprg/quota-monitor-extensions/-/blob/main/images/QuotaGuard-multiaccount-ver02.drawio?ref_type=heads)
