@@ -164,7 +164,7 @@ For multi-account setups:
 
 1. Clone / Copy github Repo (add repo link)
 2. Create a S3 bucket for the solution resources and create a folder named "qg-templates" in the bucket
-3. Give access to your AWS Organization to the S3 bucket by specifying the following Policy
+3. Give access to your AWS Organization to the S3 bucket by specifying the following Policy   
   ```{```  
 ```    "Version": "2012-10-17",```  
 ```    "Statement": [{```  
