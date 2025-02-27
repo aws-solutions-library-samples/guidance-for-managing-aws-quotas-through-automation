@@ -36,6 +36,11 @@ Parameters:
     Type: String
     MinLength: '1'
     Description: Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events
+  ExecutionTimeInCron:
+    Type: String
+    MinLength: '1'
+    Description: Cron Expression to specify the schedule for pulling usage data and performing threshold checks. For Cron Expression Syntax refer https://docs.aws.amazon.com/eventbridge/latest/userguide/eb-scheduled-rule-pattern.html#eb-cron-expressions
+    Default: 0/10 * * * ? *            
 Resources:
   QuotaGuardEventRule: 
     Type: AWS::Events::Rule
@@ -102,6 +107,8 @@ Resources:
             ParameterValue: !Ref ConfigFile
           - ParameterKey: 'RegionList'
             ParameterValue: !Ref RegionList                          
+          - ParameterKey: 'ExecutionTimeInCron'
+            ParameterValue: !Ref ExecutionTimeInCron                          
         StackInstancesGroup:
           - Regions:
               - !Ref 'AWS::Region'

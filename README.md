@@ -120,17 +120,27 @@ For single account setup,
 4. Use the below command to upload resources to the bucket and deploy the stack
 
   ```./deploy.sh -h```
+
   ```Usage: $0 [OPTIONS]```
  
   ```Deploy CloudFormation stack for Quota Guard```
+
   ```Required Parameters:```
+
   ```  -p, --profile     AWS CLI profile name```
+
   ```  -b, --bucket      S3 bucket name for deployment```
+
   ```  -t, --type        Account type (single or multi)```
+
   ```  -e, --email       Email address for notifications```
+
   ```  Example:```
+
   ```   $0 --profile myprofile --bucket my-bucket-name --type multi --email user@example.com```
+
   ```   $0 -p myprofile -b my-bucket-name -t single -e user@example.com```
+
 
 
 
@@ -172,16 +182,30 @@ For multi-account setups:
 ```        }```
 ```    }]```
 ```}```
-3. Configure your AWS credentials for AWS CLI as mentioned in the document “[Authenticating using IAM user credentials for the AWS CLI](https://docs.aws.amazon.com/cli/v1/userguide/cli-authentication-user.html)”. 
-4. upload the resources to this S3 bucket using the below command
+3. Create  your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) upload the resources to this S3 bucket using the below command
+4. Use the below command to upload resources to the bucket and deploy the stack
 
-  ```./deploy.sh``` 
+  ```./deploy.sh -h```
 
-OR
+  ```Usage: $0 [OPTIONS]```
+ 
+  ```Deploy CloudFormation stack for Quota Guard```
 
-If you are using IAM Identity Center you can create and use your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) upload the resources to this S3 bucket using the below command
+  ```Required Parameters:```
 
-  ```/deploy.sh —profile <sso-profile-name>```
+  ```  -p, --profile     AWS CLI profile name```
+
+  ```  -b, --bucket      S3 bucket name for deployment```
+
+  ```  -t, --type        Account type (single or multi)```
+
+  ```  -e, --email       Email address for notifications```
+
+  ```  Example:```
+
+  ```   $0 --profile myprofile --bucket my-bucket-name --type multi --email user@example.com```
+
+  ```   $0 -p myprofile -b my-bucket-name -t single -e user@example.com```
 
 5. Deploy  the Hub Stack in the central account: 
     
