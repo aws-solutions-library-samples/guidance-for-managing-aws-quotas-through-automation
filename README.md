@@ -165,23 +165,23 @@ For multi-account setups:
 1. Clone / Copy github Repo (add repo link)
 2. Create a S3 bucket for the solution resources and create a folder named "qg-templates" in the bucket
 3. Give access to your AWS Organization to the S3 bucket by specifying the following Policy
-  ```{```
-```    "Version": "2012-10-17",```
-```    "Statement": [{```
-```        "Sid": "AllowGetObject",```
-```        "Principal": {```
-```            "AWS": "*"```
-```        },```
-```        "Effect": "Allow",```
-```        "Action": "s3:GetObject",```
-```        "Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",```
-```        "Condition": {```
-```            "StringEquals": {```
-```                "aws:PrincipalOrgID": ["o-aa111bb222"]```
-```            }```
-```        }```
-```    }]```
-```}```
+  ```{```  
+```    "Version": "2012-10-17",```  
+```    "Statement": [{```  
+```        "Sid": "AllowGetObject",```  
+```        "Principal": {```  
+```            "AWS": "*"```  
+```        },```  
+```        "Effect": "Allow",```  
+```        "Action": "s3:GetObject",```  
+```        "Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",```  
+```        "Condition": {```  
+```            "StringEquals": {```  
+```                "aws:PrincipalOrgID": ["o-aa111bb222"]```  
+```            }```  
+```        }```  
+```    }]```  
+```}```  
 3. Create  your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) upload the resources to this S3 bucket using the below command
 4. Use the below command to upload resources to the bucket and deploy the stack
 
