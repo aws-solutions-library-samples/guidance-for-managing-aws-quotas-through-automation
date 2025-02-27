@@ -19,8 +19,8 @@ Whether you're managing a growing cloud infrastructure or maintaining large-scal
 
 ##
 ## Solution Components
-
-QuotaGuard is an AWS solution designed to monitor and alert on service quota usage across single or multiple AWS accounts. It ensures proactive management of AWS resource quotas, preventing service disruptions due to quota exhaustion.
+QuotaGuard is a automation designed to monitor and alert on service quota usage across single or multiple AWS accounts.
+It ensures proactive management of AWS resource quotas, preventing service disruptions due to quota exhaustion.
 
 QuotaGuard provides two deployment models:
 
