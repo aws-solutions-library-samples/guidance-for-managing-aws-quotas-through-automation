@@ -855,10 +855,16 @@ def lambda_handler(event, context):
         if(quotaObject['QuotaAppliedAtLevel'] == 'Regional'):
             for region in regions:
                 logger.debug("Pulling Quotas for ",region)
-                globals()[QuotaReportingFunc](serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=region)
+                if hasattr(sys.modules[__name__],QuotaReportingFunc):
+                    getattr(sys.modules[__name__], QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=region)
+                else:
+                    logger.warning(f"Quota not implemented: {QuotaReportingFunc}. Skipping this check for region {region}")
         else:
             logger.debug("Pulling Quotas for current region ",currentRegion)
-            globals()[QuotaReportingFunc](serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=currentRegion)
+            if hasattr(sys.modules[__name__],QuotaReportingFunc):
+                    getattr(sys.modules[__name__], QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=region)
+            else:
+                logger.warning(f"Quota not implemented: {QuotaReportingFunc}. Skipping this check for region {currentRegion}")
 
     response = {
                 'isBase64Encoded': False,
