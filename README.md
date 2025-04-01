@@ -1,10 +1,6 @@
 # Guidance for Managing AWS Quotas Through Automation
 
-## Table of Contents (required)
-
-List the top-level sections of the README template, along with a hyperlink to the specific section.
-
-### Required
+## Table of Contents 
 
 1. [Overview](#overview-required)
     - [Cost](#cost)
@@ -17,18 +13,11 @@ List the top-level sections of the README template, along with a hyperlink to th
 6. [Next Steps](#next-steps-required)
 7. [Cleanup](#cleanup-required)
 
-***Optional***
-
-8. [FAQ, known issues, additional considerations, and limitations](#faq-known-issues-additional-considerations-and-limitations-optional)
-9. [Revisions](#revisions-optional)
-10. [Notices](#notices-optional)
-11. [Authors](#authors-optional)
-
-## Overview (required)
+## Overview 
 
 Managing AWS service quotas effectively is crucial for maintaining operational continuity and preventing unexpected disruptions to business-critical applications. While AWS provides native solutions like Service Quotas and Trusted Advisor for limit monitoring, organizations often face challenges in implementing comprehensive quota management strategies, particularly for resources not covered by these services. AWS provides a [Quota Monitor solution](https://aws.amazon.com/solutions/implementations/quota-monitor/) which allows customers to manage several AWS service Quotas. However there are quotas which are not currently exposed through the AWS Service Quota service and cannot be managed by these solutions.
 
-QuotaGuard solution in this repository provides an automation to manage quotas which are not captured by above solutions. It uses a flexible, pull-based model that allows customers to monitor Any AWS service quota, if they are not covered by AWS Trusted Advisor or Service Quotas. This solution empowers organizations to:
+This solution in this repository provides an automation to manage quotas which are not captured by above solutions. It uses a flexible, pull-based model that allows customers to monitor Any AWS service quota, if they are not covered by AWS Trusted Advisor or Service Quotas. This solution empowers organizations to:
  
 * Create custom quota monitoring templates for any AWS service
 * Define and track service-specific limits using AWS API calls
@@ -96,7 +85,7 @@ The following table provides a sample cost breakdown for deploying this Guidance
 
 ### Operating System
 
-These deployment instructions are optimized to best work on macOS, Linux or Windows based operating systems with a bash shell. Deployment in another OS may require additional steps.
+These deployment instructions are optimized to best work on macOS, Linux or Windows based operating systems with a bash shell and the [aws cli](https://aws.amazon.com/cli/). Deployment in another OS may require additional steps.
 
 ### AWS account requirements
 
@@ -156,7 +145,7 @@ These deployment instructions are optimized to best work on macOS, Linux or Wind
 
 6. Provide  the required parameters -
 
-    * Configfile - JSON Config file name for QuotaGuard configuration.
+    * Configfile - JSON Config file name for the configuration.
     * DeploymentBucket - The name of the S3 bucket containing the lambda package and templates.
     * DeploymentBucketPrefix - (qg-templates) - S3 prefix for Lambda package.
     * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events.
@@ -204,7 +193,7 @@ Make sure to have followed the [AWS account requirements](#aws-account-requireme
     5.2. Provide  the required parameters - 
 
    * AWSOrganizationId - Organization Id for your AWS Organizations.
-   * ConfigFile - JSON Config file name for QuotaGuard configuration.
+   * ConfigFile - JSON Config file name for the configuration.
    * DeploymentBucket - S3 bucket containing the Lambda package and templates.
    * DeploymentBucketPrefix - The prefix of the S3 bucket containing the Lambda package and templates.
    * OrganizationalUnits - List of OUs for which you want to monitor Quotas.
@@ -239,7 +228,7 @@ Make sure to have followed the [AWS account requirements](#aws-account-requireme
 There is no action needed once the stacks are deployed. The solution will run a lambda function periodically, per account, to check quotas specified in the configuration file
 
 
-## Next Steps (required)
+## Next Steps
 
 You can tailor QuotaGuard solution to your needs by: 
 
@@ -249,7 +238,7 @@ You can tailor QuotaGuard solution to your needs by:
 
 
 
-## Cleanup (required)
+## Cleanup 
 
 ### Single account
 
@@ -260,11 +249,16 @@ You can tailor QuotaGuard solution to your needs by:
 1. Delete the stacksets from the cloudformation console
 2. Delete the stack from the cloudformation console
 
-## Notices (optional)
+## Notices 
 
 *Customers are responsible for making their own independent assessment of the information in this Guidance. This Guidance: (a) is for informational purposes only, (b) represents AWS current product offerings and practices, which are subject to change without notice, and (c) does not create any commitments or assurances from AWS and its affiliates, suppliers or licensors. AWS products or services are provided “as is” without warranties, representations, or conditions of any kind, whether express or implied. AWS responsibilities and liabilities to its customers are controlled by AWS agreements, and this Guidance is not part of, nor does it modify, any agreement between AWS and its customers.*
 
 
-## Authors (optional)
+## Authors
 
+* Anandprasanna Gaitonde - anandprg@amazon.com
+* Preetam Rebello - preetreb@amazon.com
+* Raj Bagwe - rbagwe@amazon.com
+* Varun Mehta - varunmra@amazon.com
+* Santiago Flores Kanter - sfkanter@amazon.com
 
