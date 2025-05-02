@@ -17,7 +17,7 @@
 
 Managing AWS service quotas effectively is crucial for maintaining operational continuity and preventing unexpected disruptions to business-critical applications. While AWS provides native solutions like Service Quotas and Trusted Advisor for limit monitoring, organizations often face challenges in implementing comprehensive quota management strategies, particularly for resources not covered by these services. AWS provides a [Quota Monitor solution](https://aws.amazon.com/solutions/implementations/quota-monitor/) which allows customers to manage several AWS service Quotas. However there are quotas which are not currently exposed through the AWS Service Quota service and cannot be managed by these solutions.
 
-This solution in this repository provides an automation to manage quotas which are not captured by above solutions. It uses a flexible, pull-based model that allows customers to monitor Any AWS service quota, if they are not covered by AWS Trusted Advisor or Service Quotas. This solution empowers organizations to:
+This Guidance in this repository provides an automation to manage quotas which are not captured by above solutions. It uses a flexible, pull-based model that allows customers to monitor Any AWS service quota, if they are not covered by AWS Trusted Advisor or Service Quotas. This Guidance empowers organizations to:
  
 * Create custom quota monitoring templates for any AWS service
 * Define and track service-specific limits using AWS API calls
@@ -25,15 +25,17 @@ This solution in this repository provides an automation to manage quotas which a
 * Maintain centralized visibility of all service quotas across their multi-account AWS environment
 * Provide information on which resources are crossing the Service Quota threshold boundary
 
-Whether you're managing a growing cloud infrastructure or maintaining large-scale AWS deployments, this solution provides the tools necessary for proactive quota management and operational excellence.
+Whether you're managing a growing cloud infrastructure or maintaining large-scale AWS deployments, this Guidance provides the tools necessary for proactive quota management and operational excellence.
 
-The solutions can be deployed in a single account or accross multiple accounts within an organization:
+The Guidance can be deployed in a single account or accross multiple accounts within an organization:
+
+![SingleAndMultiAccountDeployment](./images/QuotaAutomationRA.png)
 
 ### Single Account Deployment
 
-![SingleAccountDeployment](./images/QuotaGuard-single_account-ver02.png)
 
-The Single Account deployment model monitors service quotas within one AWS account. The solutions works as follows,
+
+The Single Account deployment model monitors service quotas within one AWS account. The Guidance works as follows,
 
 1. **Scheduled  Monitoring**: An **EventBridge  rule** triggers the Lambda function (QuotaGuardLambda) every 10  minutes. The  Lambda function reads the configuration file (QuotaList.json) from the  specified S3 bucket to identify the quotas to monitor and their  thresholds.
 2. **Quota  Data Retrieval**:  The  Lambda function queries AWS Service Quotas API to  fetch current quota usage for the specified services and regions.
@@ -44,9 +46,8 @@ The Single Account deployment model monitors service quotas within one AWS accou
 
 ### Multi-Account Deployment
 
-![MultiAccountDeployment](./images/QuotaGuard-multi_account-ver02.png)
 
-The Multi-Account model uses a hub-and-spoke architecture to monitor quotas across multiple AWS accounts in an organization. The solutions works as follows, 
+The Multi-Account model uses a hub-and-spoke architecture to monitor quotas across multiple AWS accounts in an organization. The Guidance works as follows, 
 
 **Spoke (or member) Account Workflow**
 
@@ -65,11 +66,7 @@ The Multi-Account model uses a hub-and-spoke architecture to monitor quotas acro
 
 ### Cost 
 
-_You are responsible for the cost of the AWS services used while running this Guidance. As of <month> <year>, the cost for running this Guidance with the default settings in the <Default AWS Region (Most likely will be US East (N. Virginia)) > is approximately $<n.nn> per month for processing ( <nnnnn> records )._
-
-_We recommend creating a [Budget](https://docs.aws.amazon.com/cost-management/latest/userguide/budgets-managing-costs.html) through [AWS Cost Explorer](https://aws.amazon.com/aws-cost-management/aws-cost-explorer/) to help manage costs. Prices are subject to change. For full details, refer to the pricing webpage for each AWS service used in this Guidance._
-
-The cost of running this guidance per region per account is $6.45 per month
+As of May 2025, The cost of running this Guidance per region per account is $6.45 per month for processing 259200 records.
 
 ### Sample Cost Table
 
@@ -89,8 +86,9 @@ These deployment instructions are optimized to best work on macOS, Linux or Wind
 
 ### AWS account requirements
 
-1. A S3 bucket to store the guidance artifacts (Lambda function code, configuration and deployment files)
-2. Multi-account deployments require the following resource policy applied to the S3 bucket where files will be stored. Replace ORG_ID for your organization identifier:
+1. [Enable IAM Identity Center](https://docs.aws.amazon.com/singlesignon/latest/userguide/enable-identity-center.html) to your AWS account
+2. A S3 bucket to store the Guidance artifacts (Lambda function code, configuration and deployment files)
+2. For Multi-account deployments [apply the following resource policy to the S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/add-bucket-policy.html). Replace ORG_ID for your organization identifier. You can get your ORG_ID from the [settings](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_view_org.html) view of your AWS Organizations. 
   ```{```  
 ```    "Version": "2012-10-17",```  
 ```    "Statement": [{```  
@@ -100,7 +98,7 @@ These deployment instructions are optimized to best work on macOS, Linux or Wind
 ```        },```  
 ```        "Effect": "Allow",```  
 ```        "Action": "s3:GetObject",```  
-```        "Resource": "arn:aws:s3:::amzn-s3-demo-bucket/*",```  
+```        "Resource": "arn:aws:s3:::["S3_BUCKET_NAME"]/*",```  
 ```        "Condition": {```  
 ```            "StringEquals": {```  
 ```                "aws:PrincipalOrgID": ["ORG_ID"]```  
@@ -113,14 +111,14 @@ These deployment instructions are optimized to best work on macOS, Linux or Wind
 
 ### Single Account Deployment
 
-1. Clone / Copy github Repo (add repo link)
-2. Create a S3 bucket for the solution resources and create a folder named "qg-templates" in the bucket
-3. Create  your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) upload the resources to this S3 bucket using the below command
+1. Clone / Copy [github Repo](https://github.com/aws-solutions-library-samples/guidance-for-managing-aws-quotas-through-automation)
+2. [Create a S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/GetStartedWithS3.html) for the Guidance resources and create a folder named "qg-templates" in the bucket
+3. Create  your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) 
 4. Use the below command to upload resources to the bucket and deploy the stack
 
   ```./deploy.sh -h```
 
-  ```Usage: $0 [OPTIONS]```
+  ```Usage: ./deploy.sh [OPTIONS]```
  
   ```Deploy CloudFormation stack for Quota Guard```
 
@@ -136,18 +134,18 @@ These deployment instructions are optimized to best work on macOS, Linux or Wind
 
   ```  Example:```
 
-  ```   $0 --profile myprofile --bucket my-bucket-name --type multi --email user@example.com```
+  ```   ./deploy.sh --profile myprofile --bucket my-bucket-name --type multi --email user@example.com```
 
-  ```   $0 -p myprofile -b my-bucket-name -t single -e user@example.com```
+  ```   ./deploy.sh -p myprofile -b my-bucket-name -t single -e user@example.com```
 
 
-5. Use this CloudFormation template ***quota-guard-single-account.yaml*** from the S3 bucket to deploy the solution. CloudFormation stacks are deployed using the console as explained in the documentation through [console](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html) or [CLI.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html)
+5. Use this CloudFormation template ***quota-guard-single-account.yaml*** from the S3 bucket to deploy the Guidance. CloudFormation stacks are deployed using the console as explained in the documentation through [console](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html) or [CLI.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html)
 
 6. Provide  the required parameters -
 
     * Configfile - JSON Config file name for the configuration.
     * DeploymentBucket - The name of the S3 bucket containing the lambda package and templates.
-    * DeploymentBucketPrefix - (qg-templates) - S3 prefix for Lambda package.
+    * DeploymentBucketPrefix - S3 prefix of folder containing Lambda package and templates.
     * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events.
     * RegionList - List of AWS Regions to monitor quota of resources.
     * ExecutionTimeInCron - Cron Expression to specify the schedule for pulling usage data and performing threshold checks. 
@@ -157,16 +155,16 @@ These deployment instructions are optimized to best work on macOS, Linux or Wind
 
 ### Multi-Account Deployment
 
-Make sure to have followed the [AWS account requirements](#aws-account-requirements) before continuing with these steps.
+Make sure to have followed the [AWS account requirements](#aws-account-requirements) before continuing with these steps. Additionally, you need a multi-account AWS environment by [setting up AWS Organizations](https://docs.aws.amazon.com/organizations/latest/userguide/orgs_tutorials_basic.html) 
 
-1. Clone / Copy github Repo (add repo link)
-2. Create a S3 bucket for the solution resources and create a folder named "qg-templates" in the bucket
-3. Create  your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html) upload the resources to this S3 bucket using the below command
+1. Clone / Copy [github Repo](https://github.com/aws-solutions-library-samples/guidance-for-managing-aws-quotas-through-automation)
+2. [Create a S3 bucket](https://docs.aws.amazon.com/AmazonS3/latest/userguide/GetStartedWithS3.html) for the Guidance resources in the Hub account i.e. management account and create a folder named "qg-templates" in the bucket
+3. Create  your SSO profile as specified in the document “[Configuring IAM Identity Center authentication with the AWS CLI”](https://docs.aws.amazon.com/cli/latest/userguide/cli-configure-sso.html)
 4. Use the below command to upload resources to the bucket and deploy the stack
 
   ```./deploy.sh -h```
 
-  ```Usage: $0 [OPTIONS]```
+  ```Usage: ./deploy.sh [OPTIONS]```
  
   ```Deploy CloudFormation stack for Quota Guard```
 
@@ -182,20 +180,20 @@ Make sure to have followed the [AWS account requirements](#aws-account-requireme
 
   ```  Example:```
 
-  ```   $0 --profile myprofile --bucket my-bucket-name --type multi --email user@example.com```
+  ```   ./deploy.sh --profile myprofile --bucket my-bucket-name --type multi --email user@example.com```
 
-  ```   $0 -p myprofile -b my-bucket-name -t single -e user@example.com```
+  ```   ./deploy.sh -p myprofile -b my-bucket-name -t single -e user@example.com```
 
-5. Deploy  the Hub Stack in the central account: 
+5. Deploy  the Hub Stack in the management account: 
     
-    5.1. Use this CloudFormation template ***quota-guard-hub.yaml*** from the S3 bucket to deploy the solution. CloudFormation stacks are deployed using the console as explained in the documentation through [console](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html) or [CLI.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html)
+    5.1. Use this CloudFormation template ***quota-guard-hub.yaml*** from the S3 bucket to deploy the Guidance. CloudFormation stacks are deployed using the console as explained in the documentation through [console](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/cfn-console-create-stack.html) or [CLI.](https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/using-cfn-cli-creating-stack.html)
     
     5.2. Provide  the required parameters - 
 
    * AWSOrganizationId - Organization Id for your AWS Organizations.
    * ConfigFile - JSON Config file name for the configuration.
    * DeploymentBucket - S3 bucket containing the Lambda package and templates.
-   * DeploymentBucketPrefix - The prefix of the S3 bucket containing the Lambda package and templates.
+   * DeploymentBucketPrefix - S3 prefix of folder containing Lambda package and templates.
    * OrganizationalUnits - List of OUs for which you want to monitor Quotas.
    * QuotaThresholdEventNotificationEmail - Email Address of an Admin who will receive notifications of Quota Threshold Exceeded Events.
    * RegionList - List of AWS Regions to monitor quota of resources.
@@ -203,16 +201,6 @@ Make sure to have followed the [AWS account requirements](#aws-account-requireme
 
 7. The  Spoke Stack will be automatically deployed to member accounts via  StackSets in provided OrganizationalUnits
  
-**Example:**
-
-1. Clone the repo using command ```git clone xxxxxxxxxx```
-2. cd to the repo folder ```cd <repo-name>```
-3. Install packages in requirements using command ```pip install requirement.txt```
-4. Edit content of **file-name** and replace **s3-bucket** with the bucket name in your account.
-5. Run this command to deploy the stack ```cdk deploy``` 
-6. Capture the domain name created by running this CLI command ```aws apigateway ............```
-
-
 
 ## Deployment Validation 
 
@@ -225,12 +213,12 @@ Make sure to have followed the [AWS account requirements](#aws-account-requireme
 
 ## Running the Guidance 
 
-There is no action needed once the stacks are deployed. The solution will run a lambda function periodically, per account, to check quotas specified in the configuration file
+There is no action needed once the stacks are deployed. The Guidance will run a lambda function periodically, per account, to check quotas specified in the configuration file
 
 
 ## Next Steps
 
-You can tailor QuotaGuard solution to your needs by: 
+You can tailor QuotaGuard Guidance to your needs by: 
 
 * Updating  the QuotaList.json file with additional services or custom thresholds for service limits you want to monitor.
 * Modifying  Lambda function code for custom logic or additional integrations for service limits that you want to monitor.
