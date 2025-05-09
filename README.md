@@ -38,7 +38,7 @@ The Guidance can be deployed in a single account or accross multiple accounts wi
 The Single Account deployment model monitors service quotas within one AWS account. The Guidance works as follows,
 
 1. **Scheduled  Monitoring**: An **EventBridge  rule** triggers the Lambda function (QuotaGuardLambda) every 10  minutes. The  Lambda function reads the configuration file (QuotaList.json) from the  specified S3 bucket to identify the quotas to monitor and their  thresholds.
-2. **Quota  Data Retrieval**:  The  Lambda function queries AWS Service Quotas API to  fetch current quota usage for the specified services and regions.
+2. **Quota  Data Retrieval**:  The  Lambda function queries AWS Service Quotas API to  fetch current quota value for the specified services and regions. It also fetches the quota usage from the specified services.
 3. **Threshold  Evaluation**: The  Lambda function compares the retrieved quota usage against the thresholds and if any quota exceeds its threshold, the Lambda function generates a custom  event (quota-threshold-event).
 4. **Alert  Generation**: The  custom event is sent to EventBridge, which matches it against a  notification rule (QuotaGuardEventNotificationRule). The  matched event is routed to an SNS topic (QuotaThresholdSnsTopic).
 5. **Administrator  Notification**: The  SNS topic sends an email notification to the administrator's email  address provided during deployment. The  email contains details about the breached quota, including service name,  region, and usage percentage.
@@ -52,7 +52,7 @@ The Multi-Account model uses a hub-and-spoke architecture to monitor quotas acro
 **Spoke (or member) Account Workflow**
 
 1. **Local  Quota Monitoring**: In  each spoke account, an EventBridge rule triggers a Lambda function (QuotaGuardLambda)  every 10 minutes. The  Lambda function reads QuotaList.json from S3 to identify quotas and  thresholds for monitoring.
-2. **Quota  Data Retrieval**: The  Lambda function queries AWS Service Quotas API to  fetch current quota usage for local resources.
+2. **Quota  Data Retrieval**: The  Lambda function queries AWS Service Quotas API to  fetch current quota value for the specified services and regions. It also fetches the quota usage from the specified services.
 3. **Threshold  Evaluation**: The  Lambda function compares current usage and If any quota exceeds its threshold, it generates a custom event (quota-threshold-event).
 4. **Event  Forwarding to Hub**: Using  a cross-account IAM role, the custom event is sent to the central  EventBus in the hub account (or management account) via EventBridge.
 5. **Data  Storage**: Quota  usage data is stored locally in a DynamoDB table (QuotaGuardDDBTable) for  tracking purposes.
@@ -64,9 +64,34 @@ The Multi-Account model uses a hub-and-spoke architecture to monitor quotas acro
 8. **Administrator  Notification**: The  SNS topic sends notifications to administrators with details  about breached quotas across all accounts. Notifications  include information such as account ID, service name, region, and usage  percentage.
 
 
+### List of Service Quotas Implemented
+
+|Service  Code	|Quota Code	|Limit Name	|
+|---	|---	|---	|
+|ebs	|L-D18FCD1D	|Storage for General Purpose SSD (gp2) volumes, in TiB	|
+|ec2	|L-C4B238BF	|Concurrent client connections per Client VPN endpoint	|
+|ec2	|L-43872EB7	|Route Tables per transit gateway	|
+|elasticloadbalancing	|L-CE3125E5	|Registered Instances per Classic Load Balancer	|
+|vpc	|L-DF5E4CA3	|Network interfaces per Region	|
+|vpc	|L-1B52E74A	|Gateway VPC endpoints per Region	|
+|s3	|L-DC2B2D3D	|Buckets	|
+|iam	|L-0DA4ABF3	|Managed policies per role	|
+|iam	|L-BF35879D	|Server certificates per account	|
+|vpc	|L-DFA99DE7	|Private IP address quota per NAT gateway	|
+|vpc	|L-BB24F6E5	|Network Address Usage	|
+
+### Guidance Customization
+
+
+You can tailor QuotaGuard solution guidance to your needs by: 
+
+* Updating  the QuotaList.json file with additional services or custom thresholds for service limits you want to monitor.
+* Modifying  Lambda function code for custom logic or additional integrations for service limits that you want to monitor.
+* Adjusting  CloudFormation templates to add resources or change configurations (e.g.,  notification protocols).
+
 ### Cost 
 
-As of May 2025, The cost of running this Guidance per region per account is $6.45 per month for processing 259200 records.
+You are responsible for the cost of the AWS services used while running this Guidance. As of May 2025, The cost of running this Guidance per region per account is $6.45 per month for processing 259200 quota usage records. We recommend creating a Budget through AWS Cost Explorer to help manage costs. Prices are subject to change. For full details, refer to the pricing webpage for each AWS service used in this Guidance.
 
 ### Sample Cost Table
 
@@ -77,6 +102,8 @@ The following table provides a sample cost breakdown for deploying this Guidance
 | Amazon EventBridge | 259,200  | $ 0.26 |
 | AWS Lambda | 259,200 invokations | $ 2.75 |
 | Amazon DynamoDB | 5 million writes / 1 million reads | $ 3.44 |
+
+
 
 ## Prerequisites
 
