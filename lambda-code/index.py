@@ -108,6 +108,81 @@ def sendQuotaExceededEvent(region, quotaCode, serviceCode, serviceQuotaValue, us
     )
     
     logger.info(response)
+
+
+def L_6408ABDE(serviceCode, quotaCode, threshold, region):
+    """
+    Checks the Number of instances per Elasticsearch domain
+    :param serviceCode: The service code (should be 'vpc' for NAT gateway)
+    :param quotaCode: The quota code for private IP addresses per NAT gateway
+    :param threshold: The threshold value (e.g., 0.8 for 80%)
+    :param region: The AWS region to check
+    :return: None
+    """
+    resourceListCrossingThreshold = []
+    sendQuotaThresholdEvent = False
+    max_instance_count = 0    
+    # Create boto3 clients
+    es_client = boto3.client('es', region_name=region)
+    sq_client = boto3.client('service-quotas', region_name=region)
+
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+
+    try:
+        # Get the service quota
+        serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        serviceQuotaValue = float(serviceQuota['Quota']['Value'])
+        
+        logger.info(f"Instances per domain for Elasticsearch quota: {serviceQuotaValue}")
+
+        if is_testing_enabled:
+            test_filename= f'tests/{inspect.stack()[0][3]}.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename}")
+            with open(test_filename,'r') as test_file_content:
+                es_domains = json.load(test_file_content)
+        else:
+            # Get all Elasticsearch Domains
+            paginator = es_client.get_paginator('list-domain-names')
+            es_domain_names = []
+            for page in paginator.paginate():
+                es_domain_names.extend(page['DomainName'])
+
+            logger.info(es_domains)
+            paginator = es_client.get_paginator('describe_elasticsearch_domains(DomainNames=es_domain_names)')
+            es_domains = []
+            for page in paginator.paginate():
+                es_domains.extend(page['DomainStatusList'])
+
+
+        for es_domain in es_domains:
+            es_domain_id = es_domain['DomainId']
+            instance_count = es_domain['ElasticsearchClusterConfig']['InstanceCount']
+            
+            usage_percentage = (instance_count / serviceQuotaValue) * 100
+            
+            logger.info(f"Elastic Search Domain {es_domain_id}: {instance_count} instances used out of {serviceQuotaValue}")
+
+            if max_instance_count < instance_count:
+                    max_instance_count = instance_count
+                    logger.info(f"Max value={max_instance_count}")
+
+            if usage_percentage > float(threshold) * 100:
+                data = {
+                "resourceARN" : es_domain_id,
+                "usageValue" : instance_count
+                }
+                resourceListCrossingThreshold.append(data)
+                sendQuotaThresholdEvent = True
+                logger.warning(f"ES Domain {es_domain_id} Instance count ({instance_count}) exceeds {float(threshold) * 100}% of the quota ({serviceQuotaValue})")
+            
+        # Update quota usage
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(max_private_ip_count),json.dumps(resourceListCrossingThreshold),sendQuotaThresholdEvent)
+
+    except ClientError as e:
+        logger.error(f"Error checking ES Domain Instances quota: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}") 
+
     
 def L_BB24F6E5(serviceCode, quotaCode, threshold, region):
     """
@@ -335,11 +410,175 @@ def L_C4B238BF(serviceCode, quotaCode, threshold,region):
         updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxConcurrentClientVpnConnectionsPerCVPNEndpoint),json.dumps(resourceListCrossingThreshold),sendQuotaThresholdEvent)
  
     except ClientError as e:
-        logger.error(f"Error checking NAT gateway private IP quota: {e}")
+        logger.error(f"Error checking Concurrent Client VPN Connections per Endpoint quota: {e}")
     except Exception as e:
-        logger.error(f"Unexpected error: {e}")                      
-          
+        logger.error(f"Unexpected error: {e}")   
 
+
+          
+def L_7E9ECCDB(serviceCode, quotaCode, threshold,region):
+    """
+    Checks VPC Peering Connections per VPC
+    :param serviceCode: The service code
+    :param quotaCode: The quota code
+    :param threshold: The threshold value
+    :return: None
+    """
+
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+
+    maxConcurrentVpcPeeringConnectionsPerVPC = 0
+    resourceListCrossingThreshold = []
+    sendQuotaThresholdEvent = False
+
+    try:
+        # Get current quota
+
+        serviceQuotaValue = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)['Quota']['Value']
+
+        # Create a reusable Paginator
+        paginator = ec2.get_paginator('describe_vpcs')    
+        
+        if is_testing_enabled:
+            test_filename_vpcs = f'tests/{inspect.stack()[0][3]}_describe_vpcs.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename_vpcs}")
+            with open(test_filename_vpcs,'r') as test_file_content:
+                test_vpcs = json.load(test_file_content)
+            test_filename_vpc_peering_connections = f'tests/{inspect.stack()[0][3]}_describe_vpc_peering_connections.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename_vpc_peering_connections}")
+            with open(test_filename_vpc_peering_connections,'r') as test_file_content:
+                vpc_peering_connections_test = json.load(test_file_content)
+            page_iterator = test_vpcs
+        else:
+            # Create a PageIterator from the Paginator
+            page_iterator = paginator.paginate()
+        for vpcs in page_iterator:
+            for vpc in vpcs['Vpcs']:
+                if is_testing_enabled:
+                    vpc_peering_connections_accepted = vpc_peering_connections_test
+                    vpc_peering_connections_requested = vpc_peering_connections_test
+                else:
+                    # Per each VPC found, call the describe API and sum the connections
+                    vpc_peering_connections_accepted = ec2.describe_vpc_peering_connections(
+                        Filters=[
+                            {
+                                'Name': 'accepter-vpc-info.vpc-id',
+                                'Values': [
+                                    vpc['VpcId'],
+                                ],
+                            },
+                            ]
+                    )['VpcPeeringConnections']
+
+                    vpc_peering_connections_requested = ec2.describe_vpc_peering_connections(
+                        Filters=[
+                            {
+                                'Name': 'requester-vpc-info.vpc-id',
+                                'Values': [
+                                    vpc['VpcId'],
+                                ],
+                            },
+                            ]
+                    )['VpcPeeringConnections']
+
+                numVpcPeeringConnections = len(vpc_peering_connections_accepted) + len(vpc_peering_connections_requested)
+                logger.info(f"VPC Id={vpc['VpcId']}. Number of VpcPeeringConnections={numVpcPeeringConnections}")
+                
+                if numVpcPeeringConnections/serviceQuotaValue > float(threshold)/100:
+                    logger.info(f"Exceeding Threshold for this VPC Id={vpc['VpcId']}")
+                    sendQuotaThresholdEvent = True
+                    data = {
+                        "resourceARN" : vpc['VpcId'],
+                        "usageValue" : numVpcPeeringConnections
+                        }
+                    resourceListCrossingThreshold.append(data)
+                if maxConcurrentVpcPeeringConnectionsPerVPC < numVpcPeeringConnections:
+                    maxConcurrentVpcPeeringConnectionsPerVPC = numVpcPeeringConnections
+                    logger.info(f"Max Value: {maxConcurrentVpcPeeringConnectionsPerVPC}")
+        # Update quota usage
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxConcurrentVpcPeeringConnectionsPerVPC),json.dumps(resourceListCrossingThreshold),sendQuotaThresholdEvent)
+ 
+    except ClientError as e:
+        logger.error(f"Error checking VPC peering connections per VPC quota: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")
+
+def L_407747CB(serviceCode, quotaCode, threshold,region):
+    """
+    Checks Subnets per VPC
+    :param serviceCode: The service code
+    :param quotaCode: The quota code
+    :param threshold: The threshold value
+    :return: None
+    """
+
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+
+    maxSubnetsPerVPC = 0
+    resourceListCrossingThreshold = []
+    sendQuotaThresholdEvent = False
+
+    try:
+        # Get current quota
+
+        serviceQuotaValue = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)['Quota']['Value']
+
+        # Create a reusable Paginator
+        paginator = ec2.get_paginator('describe_vpcs')    
+        
+        if is_testing_enabled:
+            test_filename_vpcs = f'tests/{inspect.stack()[0][3]}_describe_vpcs.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename_vpcs}")
+            with open(test_filename_vpcs,'r') as test_file_content:
+                test_vpcs = json.load(test_file_content)
+            test_filename_vpc_subnets = f'tests/{inspect.stack()[0][3]}_describe_subnets.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename_vpc_subnets}")
+            with open(test_filename_vpc_subnets,'r') as test_file_content:
+                vpc_subnets_test = json.load(test_file_content)
+            page_iterator = test_vpcs
+        else:
+            # Create a PageIterator from the Paginator
+            page_iterator = paginator.paginate()
+        for vpcs in page_iterator:
+            for vpc in vpcs['Vpcs']:
+                if is_testing_enabled:
+                    vpc_subnets = vpc_subnets_test
+                else:
+                    # Per each VPC found, call the describe API and sum the connections
+                    vpc_subnets = ec2.describe_subnets(
+                        Filters=[
+                            {
+                                'Name': 'vpc-id',
+                                'Values': [
+                                    vpc['VpcId'],
+                                ],
+                            },
+                            ]
+                    )['Subnets']
+
+                    
+
+                numVpcSubnets = len(vpc_subnets)
+                logger.info(f"VPC Id={vpc['VpcId']}. Number of Subnets={numVpcSubnets}")
+                
+                if numVpcSubnets/serviceQuotaValue > float(threshold)/100:
+                    logger.info(f"Exceeding Threshold for this VPC Id={vpc['VpcId']}")
+                    sendQuotaThresholdEvent = True
+                    data = {
+                        "resourceARN" : vpc['VpcId'],
+                        "usageValue" : numVpcSubnets
+                        }
+                    resourceListCrossingThreshold.append(data)
+                if maxSubnetsPerVPC < numVpcSubnets:
+                    maxSubnetsPerVPC = numVpcSubnets
+                    logger.info(f"Max Value: {maxSubnetsPerVPC}")
+        # Update quota usage
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxSubnetsPerVPC),json.dumps(resourceListCrossingThreshold),sendQuotaThresholdEvent)
+ 
+    except ClientError as e:
+        logger.error(f"Error checking Subnets per VPC quota: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error: {e}")   
 
 
 def L_DF5E4CA3(serviceCode, quotaCode, threshold,region):
@@ -663,6 +902,47 @@ def L_1B52E74A(serviceCode, quotaCode, threshold,region):
         sendQuotaThresholdEvent = False
         
     updateQuotaUsage(region,quotaCode,serviceCode, str(serviceQuotaValue), str(numGatewayVPCEndpointsPerRegion),"",sendQuotaThresholdEvent)
+
+
+def L_45FE3B85(serviceCode, quotaCode, threshold,region):
+    """
+    Checks Egress Only Internet Gateways per region
+    :param serviceCode: The service code
+    :param quotaCode: The quota code
+    :param threshold: The threshold value
+    :return: None
+    """
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+    numGatewayVPCEndpointsPerRegion = 0
+    sendQuotaThresholdEvent = False
+    try:
+        serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    except Exception as e:
+        logger.info(f"Error calling get_service_quota: {e}. Fallback to default")
+        serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+    if is_testing_enabled:
+        test_filename= f'tests/{inspect.stack()[0][3]}_describe_vpc_endpoints.json'
+        logger.info(f"Detected testing enabled. Using test payload from {test_filename}")
+        with open(test_filename,'r') as test_file_content:
+            page_iterator = json.load(test_file_content)
+    else:
+        # Create a reusable Paginator
+        paginator = ec2.get_paginator('describe_egress_only_internet_gateways')
+        # Create a PageIterator from the Paginator
+        page_iterator = paginator.paginate()
+
+    for response in page_iterator:
+        egressGatewayListObject = response['EgressOnlyInternetGateways']
+        numEgressGatewaysPerRegion += len(egressGatewayListObject)
+    if numEgressGatewaysPerRegion/serviceQuotaValue > float(threshold)/100:
+        logger.info(f"Exceeding Threshold for No of Egress Only Internet Gateway  Per Region={numEgressGatewaysPerRegion}")
+        sendQuotaThresholdEvent = True
+    else:
+        sendQuotaThresholdEvent = False
+        
+    updateQuotaUsage(region,quotaCode,serviceCode, str(serviceQuotaValue), str(numEgressGatewaysPerRegion),"",sendQuotaThresholdEvent)
+
 
 def L_DC2B2D3D(serviceCode, quotaCode, region, threshold):
     # check for number of S3 buckets

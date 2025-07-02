@@ -1,0 +1,173 @@
+{
+    'VpcPeeringConnections': [
+        {
+            'AccepterVpcInfo': {
+                'CidrBlock': 'string',
+                'Ipv6CidrBlockSet': [
+                    {
+                        'Ipv6CidrBlock': 'string'
+                    },
+                ],
+                'CidrBlockSet': [
+                    {
+                        'CidrBlock': 'string'
+                    },
+                ],
+                'OwnerId': 'string',
+                'PeeringOptions': {
+                    'AllowDnsResolutionFromRemoteVpc': True|False,
+                    'AllowEgressFromLocalClassicLinkToRemoteVpc': True|False,
+                    'AllowEgressFromLocalVpcToRemoteClassicLink': True|False
+                },
+                'VpcId': 'vpc-a01106c6',
+                'Region': 'string'
+            },
+            'ExpirationTime': datetime(2015, 1, 1),
+            'RequesterVpcInfo': {
+                'CidrBlock': 'string',
+                'Ipv6CidrBlockSet': [
+                    {
+                        'Ipv6CidrBlock': 'string'
+                    },
+                ],
+                'CidrBlockSet': [
+                    {
+                        'CidrBlock': 'string'
+                    },
+                ],
+                'OwnerId': 'string',
+                'PeeringOptions': {
+                    'AllowDnsResolutionFromRemoteVpc': True|False,
+                    'AllowEgressFromLocalClassicLinkToRemoteVpc': True|False,
+                    'AllowEgressFromLocalVpcToRemoteClassicLink': True|False
+                },
+                'VpcId': 'string',
+                'Region': 'string'
+            },
+            'Status': {
+                'Code': 'initiating-request'|'pending-acceptance'|'active'|'deleted'|'rejected'|'failed'|'expired'|'provisioning'|'deleting',
+                'Message': 'string'
+            },
+            'Tags': [
+                {
+                    'Key': 'string',
+                    'Value': 'string'
+                },
+            ],
+            'VpcPeeringConnectionId': 'string'
+        },
+        {
+            'AccepterVpcInfo': {
+                'CidrBlock': 'string',
+                'Ipv6CidrBlockSet': [
+                    {
+                        'Ipv6CidrBlock': 'string'
+                    },
+                ],
+                'CidrBlockSet': [
+                    {
+                        'CidrBlock': 'string'
+                    },
+                ],
+                'OwnerId': 'string',
+                'PeeringOptions': {
+                    'AllowDnsResolutionFromRemoteVpc': True|False,
+                    'AllowEgressFromLocalClassicLinkToRemoteVpc': True|False,
+                    'AllowEgressFromLocalVpcToRemoteClassicLink': True|False
+                },
+                'VpcId': 'vpc-a01106c5',
+                'Region': 'string'
+            },
+            'ExpirationTime': datetime(2015, 1, 1),
+            'RequesterVpcInfo': {
+                'CidrBlock': 'string',
+                'Ipv6CidrBlockSet': [
+                    {
+                        'Ipv6CidrBlock': 'string'
+                    },
+                ],
+                'CidrBlockSet': [
+                    {
+                        'CidrBlock': 'string'
+                    },
+                ],
+                'OwnerId': 'string',
+                'PeeringOptions': {
+                    'AllowDnsResolutionFromRemoteVpc': True|False,
+                    'AllowEgressFromLocalClassicLinkToRemoteVpc': True|False,
+                    'AllowEgressFromLocalVpcToRemoteClassicLink': True|False
+                },
+                'VpcId': 'string',
+                'Region': 'string'
+            },
+            'Status': {
+                'Code': 'initiating-request'|'pending-acceptance'|'active'|'deleted'|'rejected'|'failed'|'expired'|'provisioning'|'deleting',
+                'Message': 'string'
+            },
+            'Tags': [
+                {
+                    'Key': 'string',
+                    'Value': 'string'
+                },
+            ],
+            'VpcPeeringConnectionId': 'string'
+        },
+        {
+            'AccepterVpcInfo': {
+                'CidrBlock': 'string',
+                'Ipv6CidrBlockSet': [
+                    {
+                        'Ipv6CidrBlock': 'string'
+                    },
+                ],
+                'CidrBlockSet': [
+                    {
+                        'CidrBlock': 'string'
+                    },
+                ],
+                'OwnerId': 'string',
+                'PeeringOptions': {
+                    'AllowDnsResolutionFromRemoteVpc': True|False,
+                    'AllowEgressFromLocalClassicLinkToRemoteVpc': True|False,
+                    'AllowEgressFromLocalVpcToRemoteClassicLink': True|False
+                },
+                'VpcId': 'vpc-a01106c4',
+                'Region': 'string'
+            },
+            'ExpirationTime': datetime(2015, 1, 1),
+            'RequesterVpcInfo': {
+                'CidrBlock': 'string',
+                'Ipv6CidrBlockSet': [
+                    {
+                        'Ipv6CidrBlock': 'string'
+                    },
+                ],
+                'CidrBlockSet': [
+                    {
+                        'CidrBlock': 'string'
+                    },
+                ],
+                'OwnerId': 'string',
+                'PeeringOptions': {
+                    'AllowDnsResolutionFromRemoteVpc': True|False,
+                    'AllowEgressFromLocalClassicLinkToRemoteVpc': True|False,
+                    'AllowEgressFromLocalVpcToRemoteClassicLink': True|False
+                },
+                'VpcId': 'string',
+                'Region': 'string'
+            },
+            'Status': {
+                'Code': 'initiating-request'|'pending-acceptance'|'active'|'deleted'|'rejected'|'failed'|'expired'|'provisioning'|'deleting',
+                'Message': 'string'
+            },
+            'Tags': [
+                {
+                    'Key': 'string',
+                    'Value': 'string'
+                },
+            ],
+            'VpcPeeringConnectionId': 'string'
+        },
+    ],
+    'NextToken': 'string'
+}

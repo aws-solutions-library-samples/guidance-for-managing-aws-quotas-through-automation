@@ -39,9 +39,13 @@ Resources:
       AttributeDefinitions:
         - AttributeName: QuotaCode
           AttributeType: S
+        - AttributeName: Region
+          AttributeType: S          
       KeySchema:
         - AttributeName: QuotaCode
           KeyType: HASH
+        - AttributeName: Region
+          KeyType: RANGE   
   QuotaGuardLambdaInvokePermission:
     Type: 'AWS::Lambda::Permission'
     Properties:
@@ -125,6 +129,8 @@ Resources:
                   - 'elasticloadbalancing:DescribeLoadBalancers'
                   - 'elasticloadbalancing:DescribeTargetGroups'
                   - 'ec2:DescribeVpcs'
+                  - 'ec2:DescribeSubnets'
+                  - 'ec2:DescribeVpcPeeringConnections'                  
                   - 'ec2:DescribeVpnConnections'
                 Resource: 
                   - '*'                                    
@@ -165,6 +171,13 @@ Resources:
                   - 'iam:ListAttachedRolePolicies'
                   - 'iam:ListRoles'
                   - 'iam:ListServerCertificates'
+                Resource: 
+                  - '*'
+              - Sid: ESOperations
+                Effect: Allow
+                Action:
+                  - 'es:ListDomainNames'
+                  - 'es:DescribeElasticsearchDomains'
                 Resource: 
                   - '*'                  
   QuotaGuardEventRule: 

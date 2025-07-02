@@ -1,0 +1,74 @@
+{
+    'Vpcs': [
+        {
+            'CidrBlock': '10.0.0.0/16',
+            'DhcpOptionsId': 'dopt-7a8b9c2d',
+            'InstanceTenancy': 'default',
+            'IsDefault': False,
+            'State': 'available',
+            'Tags': [
+                {
+                    'Key': 'Name',
+                    'Value': 'MyVPC',
+                },
+            ],
+            'VpcId': 'vpc-a01106c6',
+        },
+	       {   
+            'CidrBlock': '10.0.0.0/16',
+            'DhcpOptionsId': 'dopt-7a8b9c2d',
+            'InstanceTenancy': 'default',
+            'IsDefault': False,
+            'State': 'available',
+            'Tags': [
+                {   
+                    'Key': 'Name',
+                    'Value': 'MyVPC',
+                },
+            ],
+            'VpcId': 'vpc-a01106c5',
+        },
+        {   
+            'CidrBlock': '10.0.0.0/16',
+            'DhcpOptionsId': 'dopt-7a8b9c2d',
+            'InstanceTenancy': 'default',
+            'IsDefault': False,
+            'State': 'available',
+            'Tags': [
+                {   
+                    'Key': 'Name',
+                    'Value': 'MyVPC',
+                },
+            ],
+            'VpcId': 'vpc-a01106c4',
+        },
+        {   
+            'CidrBlock': '10.0.0.0/16',
+            'DhcpOptionsId': 'dopt-7a8b9c2d',
+            'InstanceTenancy': 'default',
+            'IsDefault': False,
+            'State': 'available',
+            'Tags': [
+                {   
+                    'Key': 'Name',
+                    'Value': 'MyVPC',
+                },
+            ],
+            'VpcId': 'vpc-a01106c3',
+        },
+        {   
+            'CidrBlock': '10.0.0.0/16',
+            'DhcpOptionsId': 'dopt-7a8b9c2d',
+            'InstanceTenancy': 'default',
+            'IsDefault': False,
+            'State': 'available',
+            'Tags': [
+                {   
+                    'Key': 'Name',
+                    'Value': 'MyVPC',
+                },
+            ],
+            'VpcId': 'vpc-a01106c2',
+        }
+    ]
+}
