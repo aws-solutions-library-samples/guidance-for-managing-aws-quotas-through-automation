@@ -1,0 +1,15 @@
+{
+    "Datapoints": [
+        {
+            "Timestamp": "2025-01-19T10:00:00Z",
+            "Maximum": 150.0,
+            "Unit": "Count"
+        },
+        {
+            "Timestamp": "2025-01-19T10:05:00Z",
+            "Maximum": 175.0,
+            "Unit": "Count"
+        }
+    ],
+    "Label": "NetworkAddressUsage"
+}

@@ -1,0 +1,10 @@
+{
+    "Vpcs": [
+        {
+            "VpcId": "vpc-peered11111test"
+        },
+        {
+            "VpcId": "vpc-peered22222test"
+        }
+    ]
+}

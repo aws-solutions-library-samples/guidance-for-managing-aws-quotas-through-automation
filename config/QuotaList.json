@@ -64,5 +64,35 @@
         "QuotaCode": "L-BF35879D",
         "QuotaAppliedAtLevel" : "Global",
         "Threshold" : "80"
+    },
+    {
+        "ServiceCode": "vpc",
+        "QuotaCode": "L-CD17FD4B", 
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "es",
+        "QuotaCode": "L-6408ABDE",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "vpc",
+        "QuotaCode": "L-7E9ECCDB",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "vpc",
+        "QuotaCode": "L-407747CB",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "vpc",
+        "QuotaCode": "L-45FE3B85",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
     }
 ]

@@ -1,0 +1,32 @@
+[
+    {
+        "SubnetId": "subnet-test11111",
+        "VpcId": "vpc-subnet11111test",
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "10.0.1.0/24"
+    },
+    {
+        "SubnetId": "subnet-test22222",
+        "VpcId": "vpc-subnet11111test",
+        "AvailabilityZone": "us-east-1b",
+        "CidrBlock": "10.0.2.0/24"
+    },
+    {
+        "SubnetId": "subnet-test33333",
+        "VpcId": "vpc-subnet22222test",
+        "AvailabilityZone": "us-east-1a",
+        "CidrBlock": "10.1.1.0/24"
+    },
+    {
+        "SubnetId": "subnet-test44444",
+        "VpcId": "vpc-subnet22222test",
+        "AvailabilityZone": "us-east-1b",
+        "CidrBlock": "10.1.2.0/24"
+    },
+    {
+        "SubnetId": "subnet-test55555",
+        "VpcId": "vpc-subnet22222test",
+        "AvailabilityZone": "us-east-1c",
+        "CidrBlock": "10.1.3.0/24"
+    }
+]
