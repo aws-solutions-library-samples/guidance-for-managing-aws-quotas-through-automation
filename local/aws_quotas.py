@@ -24,9 +24,9 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 
-# Setup boto3 clients
-ec2 = boto3.client('ec2')
-sq = boto3.client('service-quotas')
+# Setup boto3 clients - commented out to use region-specific clients in functions
+# ec2 = boto3.client('ec2')
+# sq = boto3.client('service-quotas')
 
 
     
@@ -208,6 +208,10 @@ def L_C4B238BF(serviceCode, quotaCode, threshold,region):
     resourceListCrossingThreshold = []
     sendQuotaThresholdEvent = False
 
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+
     try:
         # Get current quota
 
@@ -274,6 +278,11 @@ def L_DF5E4CA3(serviceCode, quotaCode, threshold,region):
     is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
     numNetworkInterfacesPerRegion = 0
     sendQuotaThresholdEvent = False
+    
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+    
     try:
         serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
     except Exception as e:
@@ -317,6 +326,11 @@ def L_D18FCD1D(serviceCode, quotaCode, threshold,region):
     is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
     sendQuotaThresholdEvent = False
     totalGeneralPurposeSSDGP2Storage = 0
+    
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+    
     serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
     serviceQuotaValue = serviceQuota['Quota']['Value']
 
@@ -479,6 +493,11 @@ def L_43872EB7(serviceCode, quotaCode, threshold,region):
     maxTransitGatewayRouteTablesPerTgw = 0
     sendQuotaThresholdEvent = False
     resourceListCrossingThreshold = []
+    
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+    
     try:
         serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
     except Exception as e:
@@ -549,6 +568,11 @@ def L_1B52E74A(serviceCode, quotaCode, threshold,region):
     is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
     numGatewayVPCEndpointsPerRegion = 0
     sendQuotaThresholdEvent = False
+    
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+    
     try:
         serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
     except Exception as e:
@@ -590,12 +614,19 @@ def L_DC2B2D3D(serviceCode, quotaCode, region, threshold):
     is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
     sendQuotaThresholdEvent = False
     bucket_count = 0
-    try:
-        serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
-    except Exception as e:
-        logger.error(f"Error calling get_service_quota: {e}")
-        serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
     
+    # Create region-specific boto3 clients
+    sq = boto3.client('service-quotas', region_name=region)
+    try:
+        try:
+            serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        except Exception as e:
+            logger.error(f"Error calling get_service_quota: {e}")
+            serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    except Exception as e:
+        logger.error(f"Error calling get_aws_default_service_quota for {serviceCode} and {quotaCode}: {e}")
+        return
+   
     serviceQuotaValue = serviceQuota['Quota']['Value']
     logger.info(f"S3 Bucket Quota: {serviceQuotaValue}")
 
@@ -896,16 +927,14 @@ def L_6408ABDE(serviceCode, quotaCode, threshold, region):
                 es_domains = json.load(test_file_content)
         else:
             # Get all Elasticsearch Domains
-            paginator = es_client.get_paginator('list-domain-names')
-            es_domain_names = []
-            for page in paginator.paginate():
-                es_domain_names.extend(page['DomainName'])
-
-            logger.info(es_domains)
-            paginator = es_client.get_paginator('describe_elasticsearch_domains(DomainNames=es_domain_names)')
-            es_domains = []
-            for page in paginator.paginate():
-                es_domains.extend(page['DomainStatusList'])
+            domain_names_response = es_client.list_domain_names()
+            es_domain_names = [domain['DomainName'] for domain in domain_names_response['DomainNames']]
+            
+            if es_domain_names:
+                es_domains_response = es_client.describe_elasticsearch_domains(DomainNames=es_domain_names)
+                es_domains = es_domains_response['DomainStatusList']
+            else:
+                es_domains = []
 
 
         for es_domain in es_domains:
@@ -951,6 +980,10 @@ def L_7E9ECCDB(serviceCode, quotaCode, threshold,region):
     maxConcurrentVpcPeeringConnectionsPerVPC = 0
     resourceListCrossingThreshold = []
     sendQuotaThresholdEvent = False
+
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
 
     try:
         # Get current quota
@@ -1039,6 +1072,10 @@ def L_407747CB(serviceCode, quotaCode, threshold,region):
     resourceListCrossingThreshold = []
     sendQuotaThresholdEvent = False
 
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+
     try:
         # Get current quota
 
@@ -1112,6 +1149,11 @@ def L_45FE3B85(serviceCode, quotaCode, threshold,region):
     is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
     numEgressGatewaysPerRegion = 0
     sendQuotaThresholdEvent = False
+    
+    # Create region-specific boto3 clients
+    ec2 = boto3.client('ec2', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+    
     try:
         serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
     except Exception as e:

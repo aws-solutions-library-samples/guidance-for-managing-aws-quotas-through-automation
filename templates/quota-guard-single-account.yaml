@@ -132,6 +132,8 @@ Resources:
                   - 'ec2:DescribeSubnets'
                   - 'ec2:DescribeVpcPeeringConnections'                  
                   - 'ec2:DescribeVpnConnections'
+                  - 'ec2:DescribeEgressOnlyInternetGateways'
+                  - 'elasticloadbalancing:DescribeTargetHealth'
                 Resource: 
                   - '*'                                    
               - Sid: ELBQuotaCheckOperations

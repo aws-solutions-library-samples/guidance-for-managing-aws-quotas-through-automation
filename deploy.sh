@@ -65,7 +65,10 @@ fi
 # Create packages directory if it doesn't exist
 mkdir -p packages
 cd lambda-code
-zip ../packages/quota_guard_1.0.0.zip index.py tests/*
+cp ../local/aws_quotas.py .
+cp ../local/quota_update_dynamo.py .
+zip ../packages/quota_guard_1.0.0.zip index.py aws_quotas.py quota_update_dynamo.py tests/*
+rm aws_quotas.py quota_update_dynamo.py
 cd ..
 
 

@@ -1,5 +1,5 @@
 AWSTemplateFormatVersion: 2010-09-09
-Description: CloudFormation Stack for Lambda based Quota Tracking and Alerting Solution on AWS for Multi-Account CFN Solution Id: SO9019
+Description: CloudFormation Stack for Lambda based Quota Tracking and Alerting Solution on AWS for Multi-Account CFN Solution Id S09019
 Parameters:
   DeploymentBucket:
     Type: String

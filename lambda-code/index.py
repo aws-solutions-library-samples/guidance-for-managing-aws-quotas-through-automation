@@ -76,7 +76,7 @@ def lambda_handler(event, context):
         else:
             logger.debug("Pulling Quotas for current region ",currentRegion)
             if hasattr(aws_quotas,QuotaReportingFunc):
-                    getattr(aws_quotas, QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=region)
+                    getattr(aws_quotas, QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=currentRegion)
             else:
                 logger.warning(f"Quota not implemented: {QuotaReportingFunc}. Skipping this check for region {currentRegion}")
 
