@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 import boto3
@@ -29,9 +30,9 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 
-# Setup boto3 clients
-ec2 = boto3.client('ec2')
-sq = boto3.client('service-quotas')
+# Setup boto3 clients - not used, each function creates region-specific clients
+# ec2 = boto3.client('ec2')
+# sq = boto3.client('service-quotas')
 
 # CSV file path for quota usage (defaults to quota_usage.csv in current directory if not set)
 quota_csv_path = os.environ.get('QUOTA_CSV_PATH', 'quota_usage.csv')
@@ -72,6 +73,23 @@ if __name__ == "__main__":
     """
     Entry point
     """
+    parser = argparse.ArgumentParser(description='AWS Quota Usage Checker')
+    parser.add_argument('--aws-region', dest='aws_region',
+                        help='AWS region (default: AWS_REGION env var or us-east-1)')
+    parser.add_argument('--region-list', dest='region_list',
+                        help='Comma-separated list of regions (default: REGION_LIST env var)')
+    args = parser.parse_args()
+
+    # CLI args take precedence over env vars
+    currentRegion = args.aws_region or os.environ.get('AWS_REGION', 'us-east-1')
+    regionList = args.region_list or os.environ.get('REGION_LIST', '')
+    if regionList:
+        regions = regionList.split(',')
+    else:
+        regions = [currentRegion]
+
+    logger.info(f"Using region(s): {regions}")
+
     with open('../config/QuotaList.json', 'r') as f:
         config = json.load(f)
     logger.info(f"Using the following config: {json.dumps(config,indent=2)}")
@@ -82,23 +100,25 @@ if __name__ == "__main__":
         thresholdValue = quotaObject['Threshold']
         QuotaReportingFunc = quotaCodeValue.replace("-", "_")
         logger.info(f"Running function: {QuotaReportingFunc}")
-        currentRegion= os.environ.get('AWS_REGION','us-east-1')
-        regionList = os.environ.get('REGION_LIST','')
-        if regionList == '':
-            regions = [currentRegion]
-        else:
-            regions= regionList.split(',')
         if(quotaObject['QuotaAppliedAtLevel'] == 'Regional'):
             for region in regions:
                 logger.debug("Pulling Quotas for ",region)
                 if hasattr(aws_quotas, QuotaReportingFunc):
-                    getattr(aws_quotas, QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=region)
+                    try:
+                        getattr(aws_quotas, QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=region)
+                    except Exception as e:
+                        logger.error(f"Error processing quota {quotaCodeValue} for region {region}: {str(e)}")
+                        logger.info(f"Continuing with next quota...")
                 else:
                     logger.warning(f"Quota not implemented: {QuotaReportingFunc}. Skipping this check for region {region}")
         else:
             logger.debug("Pulling Quotas for current region ",currentRegion)
             if hasattr(aws_quotas, QuotaReportingFunc):
-                    getattr(aws_quotas, QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=region)
+                try:
+                    getattr(aws_quotas, QuotaReportingFunc)(serviceCode=serviceCodeValue,quotaCode=quotaCodeValue, threshold=thresholdValue, region=currentRegion)
+                except Exception as e:
+                    logger.error(f"Error processing quota {quotaCodeValue} for region {currentRegion}: {str(e)}")
+                    logger.info(f"Continuing with next quota...")
             else:
                 logger.warning(f"Quota not implemented: {QuotaReportingFunc}. Skipping this check for region {currentRegion}")
 

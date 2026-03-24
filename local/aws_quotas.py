@@ -389,6 +389,8 @@ def L_CE3125E5(serviceCode, quotaCode, threshold, region):
         
         total_instances = 0
         lb_instance_counts = {}
+        resourceListCrossingThreshold = []
+        sendQuotaThresholdEvent = False
         
         # Get the service quota value
         try:
@@ -463,6 +465,8 @@ def L_CE3125E5(serviceCode, quotaCode, threshold, region):
 
             # Check if usage exceeds threshold
             if usage_percentage >= threshold:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold = [{"usageValue": total_instances}]
                 logger.warning(
                     f"WARNING: Resource usage has reached {usage_percentage:.2f}% of the quota limit!\n"
                     f"Current usage: {total_instances}\n"
@@ -475,7 +479,7 @@ def L_CE3125E5(serviceCode, quotaCode, threshold, region):
             return
 
         # Update quota usage tracking
-        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(total_instances))
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(total_instances), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
 
     except Exception as e:
         logger.error(f"Unexpected error in L_CE3125E5: {str(e)}")
@@ -671,7 +675,7 @@ def L_0DA4ABF3(serviceCode, quotaCode, region, threshold):
     is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
     sendQuotaThresholdEvent = False
     iam_client = boto3.client('iam')
-    sq_client = boto3.client('service-quotas')
+    sq_client = boto3.client('service-quotas', region_name=region)
     serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode,QuotaCode=quotaCode )
     # Quota code for managed policies per role 
     serviceQuotaValue = serviceQuota['Quota']['Value']
@@ -737,7 +741,7 @@ def L_BF35879D(serviceCode, quotaCode, region, threshold):
     # Create an IAM client
 
     iam_client = boto3.client('iam')
-    sq_client = boto3.client('service-quotas')
+    sq_client = boto3.client('service-quotas', region_name=region)
 
     # Get the service quota for server certificates
     
@@ -1217,3 +1221,1030 @@ if __name__ == "__main__":
                 logger.warning(f"Quota not implemented: {QuotaReportingFunc}. Skipping this check for region {currentRegion}")
 
 
+
+
+# ---------------------------------------------------------------------------
+# Bedrock quota helpers
+# ---------------------------------------------------------------------------
+
+def _bedrock_rpm_quota(serviceCode, quotaCode, threshold, region, model_id, quota_name):
+    """
+    Generic helper for Bedrock InvokeModel requests-per-minute quotas.
+    Uses CloudWatch AWS/Bedrock Invocations metric (Sum over 1 min) as usage.
+    :param model_id: The Bedrock model identifier used in the CloudWatch dimension
+    :param quota_name: Human-readable name for logging
+    """
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+    sendQuotaThresholdEvent = False
+    max_rpm = 0
+    resourceListCrossingThreshold = []
+
+    cloudwatch = boto3.client('cloudwatch', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+
+    try:
+        try:
+            serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        except Exception as e:
+            logger.info(f"Error calling get_service_quota: {e}. Fallback to default")
+            serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        serviceQuotaValue = float(serviceQuota['Quota']['Value'])
+        logger.info(f"{quota_name} quota: {serviceQuotaValue} RPM")
+
+        if is_testing_enabled:
+            test_filename = f'tests/{quotaCode}_cloudwatch.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename}")
+            with open(test_filename, 'r') as f:
+                response = json.load(f)
+        else:
+            end_time = datetime.utcnow()
+            start_time = end_time - timedelta(minutes=5)
+            response = cloudwatch.get_metric_statistics(
+                Namespace='AWS/Bedrock',
+                MetricName='Invocations',
+                Dimensions=[{'Name': 'ModelId', 'Value': model_id}],
+                StartTime=start_time,
+                EndTime=end_time,
+                Period=60,
+                Statistics=['Sum']
+            )
+
+        datapoints = response.get('Datapoints', [])
+        if datapoints:
+            latest = max(datapoints, key=lambda x: x['Timestamp'])
+            max_rpm = float(latest['Sum'])
+            logger.info(f"{quota_name}: {max_rpm} invocations/min (quota {serviceQuotaValue})")
+
+            usage_pct = (max_rpm / serviceQuotaValue) * 100 if serviceQuotaValue > 0 else 0
+            if usage_pct > float(threshold):
+                resourceListCrossingThreshold.append({
+                    "resourceARN": model_id,
+                    "usageValue": max_rpm
+                })
+                sendQuotaThresholdEvent = True
+                logger.warning(f"{quota_name} usage ({max_rpm}) exceeds {threshold}% of quota ({serviceQuotaValue})")
+        else:
+            logger.info(f"No CloudWatch data for {quota_name} in region {region}")
+
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(max_rpm),
+                         json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+    except ClientError as e:
+        logger.error(f"Error checking {quota_name}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error checking {quota_name}: {e}")
+
+
+def _bedrock_tpm_quota(serviceCode, quotaCode, threshold, region, model_id, quota_name):
+    """
+    Generic helper for Bedrock InvokeModel tokens-per-minute quotas.
+    Sums InputTokenCount + OutputTokenCount over 1-min periods from CloudWatch.
+    """
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+    sendQuotaThresholdEvent = False
+    max_tpm = 0
+    resourceListCrossingThreshold = []
+
+    cloudwatch = boto3.client('cloudwatch', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+
+    try:
+        try:
+            serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        except Exception as e:
+            logger.info(f"Error calling get_service_quota: {e}. Fallback to default")
+            serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        serviceQuotaValue = float(serviceQuota['Quota']['Value'])
+        logger.info(f"{quota_name} quota: {serviceQuotaValue} TPM")
+
+        end_time = datetime.utcnow()
+        start_time = end_time - timedelta(minutes=5)
+        total_tokens = 0
+
+        for metric_name in ['InputTokenCount', 'OutputTokenCount']:
+            if is_testing_enabled:
+                test_filename = f'tests/{quotaCode}_{metric_name}.json'
+                logger.info(f"Detected testing enabled. Using test payload from {test_filename}")
+                with open(test_filename, 'r') as f:
+                    response = json.load(f)
+            else:
+                response = cloudwatch.get_metric_statistics(
+                    Namespace='AWS/Bedrock',
+                    MetricName=metric_name,
+                    Dimensions=[{'Name': 'ModelId', 'Value': model_id}],
+                    StartTime=start_time,
+                    EndTime=end_time,
+                    Period=60,
+                    Statistics=['Sum']
+                )
+
+            datapoints = response.get('Datapoints', [])
+            if datapoints:
+                latest = max(datapoints, key=lambda x: x['Timestamp'])
+                total_tokens += float(latest['Sum'])
+
+        max_tpm = total_tokens
+        logger.info(f"{quota_name}: {max_tpm} tokens/min (quota {serviceQuotaValue})")
+
+        usage_pct = (max_tpm / serviceQuotaValue) * 100 if serviceQuotaValue > 0 else 0
+        if usage_pct > float(threshold):
+            resourceListCrossingThreshold.append({
+                "resourceARN": model_id,
+                "usageValue": max_tpm
+            })
+            sendQuotaThresholdEvent = True
+            logger.warning(f"{quota_name} usage ({max_tpm}) exceeds {threshold}% of quota ({serviceQuotaValue})")
+
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(max_tpm),
+                         json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+    except ClientError as e:
+        logger.error(f"Error checking {quota_name}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error checking {quota_name}: {e}")
+
+
+def _bedrock_guardrail_rps_quota(serviceCode, quotaCode, threshold, region, quota_name):
+    """
+    Generic helper for Bedrock ApplyGuardrail requests-per-second quotas.
+    Uses CloudWatch AWS/Bedrock GuardrailInvocations metric (Sum over 60s / 60).
+    """
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+    sendQuotaThresholdEvent = False
+    max_rps = 0
+    resourceListCrossingThreshold = []
+
+    cloudwatch = boto3.client('cloudwatch', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+
+    try:
+        try:
+            serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        except Exception as e:
+            logger.info(f"Error calling get_service_quota: {e}. Fallback to default")
+            serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        serviceQuotaValue = float(serviceQuota['Quota']['Value'])
+        logger.info(f"{quota_name} quota: {serviceQuotaValue} RPS")
+
+        if is_testing_enabled:
+            test_filename = f'tests/{quotaCode}_cloudwatch.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename}")
+            with open(test_filename, 'r') as f:
+                response = json.load(f)
+        else:
+            end_time = datetime.utcnow()
+            start_time = end_time - timedelta(minutes=5)
+            response = cloudwatch.get_metric_statistics(
+                Namespace='AWS/Bedrock',
+                MetricName='Invocations',
+                StartTime=start_time,
+                EndTime=end_time,
+                Period=60,
+                Statistics=['Sum']
+            )
+
+        datapoints = response.get('Datapoints', [])
+        if datapoints:
+            latest = max(datapoints, key=lambda x: x['Timestamp'])
+            max_rps = float(latest['Sum']) / 60.0
+            logger.info(f"{quota_name}: ~{max_rps:.2f} RPS (quota {serviceQuotaValue})")
+
+            usage_pct = (max_rps / serviceQuotaValue) * 100 if serviceQuotaValue > 0 else 0
+            if usage_pct > float(threshold):
+                resourceListCrossingThreshold.append({
+                    "resourceARN": "bedrock-guardrail",
+                    "usageValue": max_rps
+                })
+                sendQuotaThresholdEvent = True
+                logger.warning(f"{quota_name} usage ({max_rps:.2f}) exceeds {threshold}% of quota ({serviceQuotaValue})")
+        else:
+            logger.info(f"No CloudWatch data for {quota_name} in region {region}")
+
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(round(max_rps, 2)),
+                         json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+    except ClientError as e:
+        logger.error(f"Error checking {quota_name}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error checking {quota_name}: {e}")
+
+
+def _bedrock_guardrail_text_units_quota(serviceCode, quotaCode, threshold, region, quota_name):
+    """
+    Generic helper for Bedrock ApplyGuardrail text-units-per-second quotas.
+    These are not directly measurable via a single CloudWatch metric.
+    We report the quota value and use GuardrailInvocations as a proxy indicator.
+    """
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+    sendQuotaThresholdEvent = False
+    usage_proxy = 0
+
+    sq = boto3.client('service-quotas', region_name=region)
+
+    try:
+        try:
+            serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        except Exception as e:
+            logger.info(f"Error calling get_service_quota: {e}. Fallback to default")
+            serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        serviceQuotaValue = float(serviceQuota['Quota']['Value'])
+        logger.info(f"{quota_name} quota: {serviceQuotaValue} text units/sec. "
+                    "Actual text-unit throughput is not directly available via CloudWatch; reporting quota value only.")
+
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(usage_proxy),
+                         "", sendQuotaThresholdEvent)
+    except ClientError as e:
+        logger.error(f"Error checking {quota_name}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error checking {quota_name}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# Bedrock On-demand InvokeModel — Requests Per Minute
+# ---------------------------------------------------------------------------
+
+def L_254CACF4(serviceCode, quotaCode, threshold, region):
+    """On-demand InvokeModel requests per minute for Anthropic Claude 3.5 Sonnet"""
+    _bedrock_rpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20240620-v1:0',
+                       'On-demand InvokeModel RPM - Claude 3.5 Sonnet')
+
+
+def L_79E773B3(serviceCode, quotaCode, threshold, region):
+    """On-demand InvokeModel requests per minute for Anthropic Claude 3.5 Sonnet V2"""
+    _bedrock_rpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20241022-v2:0',
+                       'On-demand InvokeModel RPM - Claude 3.5 Sonnet V2')
+
+
+def L_2DC80978(serviceCode, quotaCode, threshold, region):
+    """On-demand InvokeModel requests per minute for Anthropic Claude 3 Haiku"""
+    _bedrock_rpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-haiku-20240307-v1:0',
+                       'On-demand InvokeModel RPM - Claude 3 Haiku')
+
+
+# ---------------------------------------------------------------------------
+# Bedrock On-demand InvokeModel — Tokens Per Minute
+# ---------------------------------------------------------------------------
+
+def L_A50569E5(serviceCode, quotaCode, threshold, region):
+    """On-demand InvokeModel tokens per minute for Anthropic Claude 3.5 Sonnet"""
+    _bedrock_tpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20240620-v1:0',
+                       'On-demand InvokeModel TPM - Claude 3.5 Sonnet')
+
+
+def L_AD41C330(serviceCode, quotaCode, threshold, region):
+    """On-demand InvokeModel tokens per minute for Anthropic Claude 3.5 Sonnet V2"""
+    _bedrock_tpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20241022-v2:0',
+                       'On-demand InvokeModel TPM - Claude 3.5 Sonnet V2')
+
+
+def L_8CE99163(serviceCode, quotaCode, threshold, region):
+    """On-demand InvokeModel tokens per minute for Anthropic Claude 3 Haiku"""
+    _bedrock_tpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-haiku-20240307-v1:0',
+                       'On-demand InvokeModel TPM - Claude 3 Haiku')
+
+
+# ---------------------------------------------------------------------------
+# Bedrock Cross-Region InvokeModel — Requests Per Minute
+# ---------------------------------------------------------------------------
+
+def L_F457545D(serviceCode, quotaCode, threshold, region):
+    """Cross-region InvokeModel requests per minute for Anthropic Claude 3.5 Sonnet"""
+    _bedrock_rpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20240620-v1:0',
+                       'Cross-region InvokeModel RPM - Claude 3.5 Sonnet')
+
+
+def L_1D3E59A3(serviceCode, quotaCode, threshold, region):
+    """Cross-Region InvokeModel requests per minute for Anthropic Claude 3.5 Sonnet V2"""
+    _bedrock_rpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20241022-v2:0',
+                       'Cross-region InvokeModel RPM - Claude 3.5 Sonnet V2')
+
+
+# ---------------------------------------------------------------------------
+# Bedrock Cross-Region InvokeModel — Tokens Per Minute
+# ---------------------------------------------------------------------------
+
+def L_FF8B4E28(serviceCode, quotaCode, threshold, region):
+    """Cross-Region InvokeModel tokens per minute for Anthropic Claude 3.5 Sonnet V2"""
+    _bedrock_tpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20241022-v2:0',
+                       'Cross-region InvokeModel TPM - Claude 3.5 Sonnet V2')
+
+
+def L_479B647F(serviceCode, quotaCode, threshold, region):
+    """Cross-region InvokeModel tokens per minute for Anthropic Claude 3.5 Sonnet"""
+    _bedrock_tpm_quota(serviceCode, quotaCode, threshold, region,
+                       'anthropic.claude-3-5-sonnet-20240620-v1:0',
+                       'Cross-region InvokeModel TPM - Claude 3.5 Sonnet')
+
+
+# ---------------------------------------------------------------------------
+# Bedrock ApplyGuardrail — Requests Per Second
+# ---------------------------------------------------------------------------
+
+def L_9072D6F0(serviceCode, quotaCode, threshold, region):
+    """On-demand ApplyGuardrail requests per second"""
+    _bedrock_guardrail_rps_quota(serviceCode, quotaCode, threshold, region,
+                                  'On-demand ApplyGuardrail RPS')
+
+
+# ---------------------------------------------------------------------------
+# Bedrock ApplyGuardrail — Text Units Per Second (policy-specific)
+# ---------------------------------------------------------------------------
+
+def L_01F3CD81(serviceCode, quotaCode, threshold, region):
+    """On-demand ApplyGuardrail Content filter policy text units per second"""
+    _bedrock_guardrail_text_units_quota(serviceCode, quotaCode, threshold, region,
+                                        'ApplyGuardrail Content filter text units/sec')
+
+
+def L_124DCF3D(serviceCode, quotaCode, threshold, region):
+    """On-demand ApplyGuardrail Denied topic policy text units per second"""
+    _bedrock_guardrail_text_units_quota(serviceCode, quotaCode, threshold, region,
+                                        'ApplyGuardrail Denied topic text units/sec')
+
+
+def L_CFCAAB0E(serviceCode, quotaCode, threshold, region):
+    """On-demand ApplyGuardrail Sensitive information filter policy text units per second"""
+    _bedrock_guardrail_text_units_quota(serviceCode, quotaCode, threshold, region,
+                                        'ApplyGuardrail Sensitive info filter text units/sec')
+
+
+def L_9F4DB459(serviceCode, quotaCode, threshold, region):
+    """On-demand ApplyGuardrail Word filter policy text units per second"""
+    _bedrock_guardrail_text_units_quota(serviceCode, quotaCode, threshold, region,
+                                        'ApplyGuardrail Word filter text units/sec')
+
+
+# ---------------------------------------------------------------------------
+# Bedrock Contextual Grounding
+# ---------------------------------------------------------------------------
+
+def L_893F8BF9(serviceCode, quotaCode, threshold, region):
+    """Contextual grounding source length in text units"""
+    _bedrock_guardrail_text_units_quota(serviceCode, quotaCode, threshold, region,
+                                        'Contextual grounding source length text units')
+
+
+# ---------------------------------------------------------------------------
+# Helper: API Rate Limit Quota (uses AWS/Usage CloudWatch namespace)
+# ---------------------------------------------------------------------------
+
+def _api_rate_limit_quota(serviceCode, quotaCode, threshold, region, cw_service, cw_resource, cw_type, cw_class, quota_name):
+    """
+    Generic helper for API rate-limit / throttle quotas.
+    Uses CloudWatch AWS/Usage namespace with CallCount metric to approximate usage.
+    :param cw_service: CloudWatch 'Service' dimension value (e.g. 'ElasticMapReduce')
+    :param cw_resource: CloudWatch 'Resource' dimension value (e.g. 'DescribeCluster')
+    :param cw_type: CloudWatch 'Type' dimension value (e.g. 'API')
+    :param cw_class: CloudWatch 'Class' dimension value (e.g. 'None')
+    :param quota_name: Human-readable name for logging
+    """
+    is_testing_enabled = 'IS_TESTING_ENABLED' in os.environ.keys()
+    sendQuotaThresholdEvent = False
+    max_usage = 0
+    resourceListCrossingThreshold = []
+
+    cloudwatch = boto3.client('cloudwatch', region_name=region)
+    sq = boto3.client('service-quotas', region_name=region)
+
+    try:
+        try:
+            serviceQuota = sq.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        except Exception as e:
+            logger.info(f"Error calling get_service_quota: {e}. Fallback to default")
+            serviceQuota = sq.get_aws_default_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+        serviceQuotaValue = float(serviceQuota['Quota']['Value'])
+        logger.info(f"{quota_name} quota: {serviceQuotaValue}")
+
+        if is_testing_enabled:
+            test_filename = f'tests/{quotaCode}_cloudwatch.json'
+            logger.info(f"Detected testing enabled. Using test payload from {test_filename}")
+            with open(test_filename, 'r') as f:
+                response = json.load(f)
+        else:
+            end_time = datetime.utcnow()
+            start_time = end_time - timedelta(minutes=5)
+            dimensions = [
+                {'Name': 'Service', 'Value': cw_service},
+                {'Name': 'Resource', 'Value': cw_resource},
+                {'Name': 'Type', 'Value': cw_type},
+                {'Name': 'Class', 'Value': cw_class},
+            ]
+            response = cloudwatch.get_metric_statistics(
+                Namespace='AWS/Usage',
+                MetricName='CallCount',
+                Dimensions=dimensions,
+                StartTime=start_time,
+                EndTime=end_time,
+                Period=60,
+                Statistics=['Sum']
+            )
+
+        datapoints = response.get('Datapoints', [])
+        if datapoints:
+            latest = max(datapoints, key=lambda x: x['Timestamp'])
+            max_usage = float(latest['Sum'])
+            logger.info(f"{quota_name}: {max_usage} calls/min (quota {serviceQuotaValue})")
+
+            usage_pct = (max_usage / serviceQuotaValue) * 100 if serviceQuotaValue > 0 else 0
+            if usage_pct > float(threshold):
+                resourceListCrossingThreshold.append({
+                    "resourceARN": f"{cw_service}/{cw_resource}",
+                    "usageValue": max_usage
+                })
+                sendQuotaThresholdEvent = True
+                logger.warning(f"{quota_name} usage ({max_usage}) exceeds {threshold}% of quota ({serviceQuotaValue})")
+        else:
+            logger.info(f"No CloudWatch usage data for {quota_name} in region {region}")
+
+        updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(max_usage),
+                         json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+    except ClientError as e:
+        logger.error(f"Error checking {quota_name}: {e}")
+    except Exception as e:
+        logger.error(f"Unexpected error checking {quota_name}: {e}")
+
+
+# ---------------------------------------------------------------------------
+# EMR (elasticmapreduce) API Rate Limit Quotas
+# ---------------------------------------------------------------------------
+
+def L_D74118B4(serviceCode, quotaCode, threshold, region):
+    """Replenishment rate of DescribeCluster calls"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'ElasticMapReduce', 'DescribeCluster', 'API', 'None',
+                          'EMR Replenishment rate of DescribeCluster calls')
+
+
+def L_283CCA2A(serviceCode, quotaCode, threshold, region):
+    """The maximum number of API requests that you can make per second"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'ElasticMapReduce', 'None', 'API', 'None',
+                          'EMR Max API requests per second')
+
+
+def L_81AF5123(serviceCode, quotaCode, threshold, region):
+    """The maximum number of DescribeCluster API requests that you can make per second"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'ElasticMapReduce', 'DescribeCluster', 'API', 'None',
+                          'EMR Max DescribeCluster requests per second')
+
+
+def L_432FAB44(serviceCode, quotaCode, threshold, region):
+    """The maximum rate at which your bucket replenishes for all EMR operations"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'ElasticMapReduce', 'None', 'API', 'None',
+                          'EMR Max bucket replenishment rate for all operations')
+
+
+def L_72BCD5B1(serviceCode, quotaCode, threshold, region):
+    """Replenishment rate of DescribeStep calls"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'ElasticMapReduce', 'DescribeStep', 'API', 'None',
+                          'EMR Replenishment rate of DescribeStep calls')
+
+
+def L_B810434D(serviceCode, quotaCode, threshold, region):
+    """The maximum number of DescribeStep API requests that you can make per second"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'ElasticMapReduce', 'DescribeStep', 'API', 'None',
+                          'EMR Max DescribeStep requests per second')
+
+
+# ---------------------------------------------------------------------------
+# EventBridge (events) API Rate Limit Quotas
+# ---------------------------------------------------------------------------
+
+def L_5540C5E3(serviceCode, quotaCode, threshold, region):
+    """Invocations throttle limit in transactions per second"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'EventBridge', 'Invocations', 'API', 'None',
+                          'EventBridge Invocations throttle limit TPS')
+
+
+def L_9B653E91(serviceCode, quotaCode, threshold, region):
+    """PutEvents throttle limit in transactions per second"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'EventBridge', 'PutEvents', 'API', 'None',
+                          'EventBridge PutEvents throttle limit TPS')
+
+
+# ---------------------------------------------------------------------------
+# CloudWatch Monitoring API Rate Limit Quotas
+# ---------------------------------------------------------------------------
+
+def L_05D334F0(serviceCode, quotaCode, threshold, region):
+    """Rate of ListMetrics requests"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'CloudWatch', 'ListMetrics', 'API', 'None',
+                          'CloudWatch Rate of ListMetrics requests')
+
+
+def L_5E141212(serviceCode, quotaCode, threshold, region):
+    """Rate of GetMetricData requests"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'CloudWatch', 'GetMetricData', 'API', 'None',
+                          'CloudWatch Rate of GetMetricData requests')
+
+
+def L_EE839489(serviceCode, quotaCode, threshold, region):
+    """Rate of GetMetricStatistics requests"""
+    _api_rate_limit_quota(serviceCode, quotaCode, threshold, region,
+                          'CloudWatch', 'GetMetricStatistics', 'API', 'None',
+                          'CloudWatch Rate of GetMetricStatistics requests')
+
+
+# ============================================================================
+# IAM Quota Functions
+# NOTE (BUG): These functions use incorrect parameter order (serviceCode, quotaCode, region, threshold)
+# instead of the standard (serviceCode, quotaCode, threshold, region).
+# Also: iam_client and sq_client are created without region_name (IAM is global but
+# service-quotas requires a region). Both issues to be fixed in a future bug-fix pass.
+# ============================================================================
+
+def L_F55AF5E4(serviceCode, quotaCode, region, threshold):
+    """Checks Users per account"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    user_count = 0
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        user_count += len(page['Users'])
+
+    logger.info(f"Total IAM users: {user_count}")
+    if user_count / serviceQuotaValue > float(threshold) / 100:
+        sendQuotaThresholdEvent = True
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(user_count), "", sendQuotaThresholdEvent)
+
+
+def L_FC9EC213(serviceCode, quotaCode, region, threshold):
+    """Checks Tags per user (max tags across all users)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxTags = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        for user in page['Users']:
+            tags_response = iam_client.list_user_tags(UserName=user['UserName'])
+            tag_count = len(tags_response['Tags'])
+            if tag_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": user['Arn'], "usageValue": tag_count})
+            if tag_count > maxTags:
+                maxTags = tag_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxTags), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_C07B4B0D(serviceCode, quotaCode, region, threshold):
+    """Checks Role trust policy length (max across all roles)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxPolicyLen = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_roles').paginate()
+    for page in paginator:
+        for role in page['Roles']:
+            policy_doc = json.dumps(role.get('AssumeRolePolicyDocument', {}))
+            policy_len = len(policy_doc)
+            if policy_len / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": role['Arn'], "usageValue": policy_len})
+            if policy_len > maxPolicyLen:
+                maxPolicyLen = policy_len
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxPolicyLen), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_3AD47CAE(serviceCode, quotaCode, region, threshold):
+    """Checks Identity providers per IAM SAML provider object"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxIdpCount = 0
+    resourceListCrossingThreshold = []
+    saml_providers = iam_client.list_saml_providers()['SAMLProviderList']
+    for provider in saml_providers:
+        provider_arn = provider['Arn']
+        metadata = iam_client.get_saml_provider(SAMLProviderArn=provider_arn)
+        saml_metadata = metadata.get('SAMLMetadataDocument', '')
+        idp_count = saml_metadata.count('<IDPSSODescriptor') + saml_metadata.count('<md:IDPSSODescriptor')
+        if idp_count == 0:
+            idp_count = 1
+        if idp_count / serviceQuotaValue > float(threshold) / 100:
+            sendQuotaThresholdEvent = True
+            resourceListCrossingThreshold.append({"resourceARN": provider_arn, "usageValue": idp_count})
+        if idp_count > maxIdpCount:
+            maxIdpCount = idp_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxIdpCount), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_F4A5425F(serviceCode, quotaCode, region, threshold):
+    """Checks Groups per account"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    group_count = 0
+    paginator = iam_client.get_paginator('list_groups').paginate()
+    for page in paginator:
+        group_count += len(page['Groups'])
+
+    logger.info(f"Total IAM groups: {group_count}")
+    if group_count / serviceQuotaValue > float(threshold) / 100:
+        sendQuotaThresholdEvent = True
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(group_count), "", sendQuotaThresholdEvent)
+
+
+def L_8E23FFD8(serviceCode, quotaCode, region, threshold):
+    """Checks Versions per managed policy (max across all customer managed policies)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxVersions = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_policies').paginate(Scope='Local')
+    for page in paginator:
+        for policy in page['Policies']:
+            versions = iam_client.list_policy_versions(PolicyArn=policy['Arn'])['Versions']
+            version_count = len(versions)
+            if version_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": policy['Arn'], "usageValue": version_count})
+            if version_count > maxVersions:
+                maxVersions = version_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxVersions), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_ED111B8C(serviceCode, quotaCode, region, threshold):
+    """Checks Managed policy length (max policy document size across all customer managed policies)"""
+    import urllib.parse
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxPolicyLen = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_policies').paginate(Scope='Local')
+    for page in paginator:
+        for policy in page['Policies']:
+            policy_version = iam_client.get_policy_version(
+                PolicyArn=policy['Arn'],
+                VersionId=policy['DefaultVersionId']
+            )
+            policy_doc = urllib.parse.unquote(json.dumps(policy_version['PolicyVersion']['Document']))
+            policy_len = len(policy_doc)
+            if policy_len / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": policy['Arn'], "usageValue": policy_len})
+            if policy_len > maxPolicyLen:
+                maxPolicyLen = policy_len
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxPolicyLen), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_6E65F664(serviceCode, quotaCode, region, threshold):
+    """Checks Instance profiles per account"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    profile_count = 0
+    paginator = iam_client.get_paginator('list_instance_profiles').paginate()
+    for page in paginator:
+        profile_count += len(page['InstanceProfiles'])
+
+    logger.info(f"Total instance profiles: {profile_count}")
+    if profile_count / serviceQuotaValue > float(threshold) / 100:
+        sendQuotaThresholdEvent = True
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(profile_count), "", sendQuotaThresholdEvent)
+
+
+def L_4019AD8B(serviceCode, quotaCode, region, threshold):
+    """Checks Managed policies per user (max across all users)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxPolicies = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        for user in page['Users']:
+            attached = iam_client.list_attached_user_policies(UserName=user['UserName'])['AttachedPolicies']
+            policy_count = len(attached)
+            if policy_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": user['Arn'], "usageValue": policy_count})
+            if policy_count > maxPolicies:
+                maxPolicies = policy_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxPolicies), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_B39FB15B(serviceCode, quotaCode, region, threshold):
+    """Checks Tags per role (max tags across all roles)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxTags = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_roles').paginate()
+    for page in paginator:
+        for role in page['Roles']:
+            tags_response = iam_client.list_role_tags(RoleName=role['RoleName'])
+            tag_count = len(tags_response['Tags'])
+            if tag_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": role['Arn'], "usageValue": tag_count})
+            if tag_count > maxTags:
+                maxTags = tag_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxTags), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_FE177D64(serviceCode, quotaCode, region, threshold):
+    """Checks Roles per account"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    role_count = 0
+    paginator = iam_client.get_paginator('list_roles').paginate()
+    for page in paginator:
+        role_count += len(page['Roles'])
+
+    logger.info(f"Total IAM roles: {role_count}")
+    if role_count / serviceQuotaValue > float(threshold) / 100:
+        sendQuotaThresholdEvent = True
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(role_count), "", sendQuotaThresholdEvent)
+
+
+def L_F1176D35(serviceCode, quotaCode, region, threshold):
+    """Checks SSH Public keys per user (max across all users)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxKeys = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        for user in page['Users']:
+            ssh_keys = iam_client.list_ssh_public_keys(UserName=user['UserName'])['SSHPublicKeys']
+            key_count = len(ssh_keys)
+            if key_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": user['Arn'], "usageValue": key_count})
+            if key_count > maxKeys:
+                maxKeys = key_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxKeys), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_C4DF001E(serviceCode, quotaCode, region, threshold):
+    """Checks Keys per SAML provider (max across all SAML providers)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxKeys = 0
+    resourceListCrossingThreshold = []
+    saml_providers = iam_client.list_saml_providers()['SAMLProviderList']
+    for provider in saml_providers:
+        provider_arn = provider['Arn']
+        metadata = iam_client.get_saml_provider(SAMLProviderArn=provider_arn)
+        saml_metadata = metadata.get('SAMLMetadataDocument', '')
+        key_count = saml_metadata.count('<KeyDescriptor') + saml_metadata.count('<md:KeyDescriptor')
+        if key_count == 0 and saml_metadata:
+            key_count = 1
+        if key_count / serviceQuotaValue > float(threshold) / 100:
+            sendQuotaThresholdEvent = True
+            resourceListCrossingThreshold.append({"resourceARN": provider_arn, "usageValue": key_count})
+        if key_count > maxKeys:
+            maxKeys = key_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxKeys), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_E95E4862(serviceCode, quotaCode, region, threshold):
+    """Checks Customer managed policies per account"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    policy_count = 0
+    paginator = iam_client.get_paginator('list_policies').paginate(Scope='Local')
+    for page in paginator:
+        policy_count += len(page['Policies'])
+
+    logger.info(f"Total customer managed policies: {policy_count}")
+    if policy_count / serviceQuotaValue > float(threshold) / 100:
+        sendQuotaThresholdEvent = True
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(policy_count), "", sendQuotaThresholdEvent)
+
+
+def L_DB618D39(serviceCode, quotaCode, region, threshold):
+    """Checks SAML providers per account"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    saml_providers = iam_client.list_saml_providers()['SAMLProviderList']
+    provider_count = len(saml_providers)
+
+    logger.info(f"Total SAML providers: {provider_count}")
+    if provider_count / serviceQuotaValue > float(threshold) / 100:
+        sendQuotaThresholdEvent = True
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(provider_count), "", sendQuotaThresholdEvent)
+
+
+def L_384571C4(serviceCode, quotaCode, region, threshold):
+    """Checks Managed policies per group (max across all groups)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxPolicies = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_groups').paginate()
+    for page in paginator:
+        for group in page['Groups']:
+            attached = iam_client.list_attached_group_policies(GroupName=group['GroupName'])['AttachedPolicies']
+            policy_count = len(attached)
+            if policy_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": group['Arn'], "usageValue": policy_count})
+            if policy_count > maxPolicies:
+                maxPolicies = policy_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxPolicies), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_8758042E(serviceCode, quotaCode, region, threshold):
+    """Checks Access keys per user (max across all users)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxKeys = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        for user in page['Users']:
+            access_keys = iam_client.list_access_keys(UserName=user['UserName'])['AccessKeyMetadata']
+            key_count = len(access_keys)
+            if key_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": user['Arn'], "usageValue": key_count})
+            if key_count > maxKeys:
+                maxKeys = key_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxKeys), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_7A1621EC(serviceCode, quotaCode, region, threshold):
+    """Checks IAM groups per user (max across all users)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxGroups = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        for user in page['Users']:
+            groups = iam_client.list_groups_for_user(UserName=user['UserName'])['Groups']
+            group_count = len(groups)
+            if group_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": user['Arn'], "usageValue": group_count})
+            if group_count > maxGroups:
+                maxGroups = group_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxGroups), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_858F3967(serviceCode, quotaCode, region, threshold):
+    """Checks OpenId connect providers per account"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    oidc_providers = iam_client.list_open_id_connect_providers()['OpenIDConnectProviderList']
+    provider_count = len(oidc_providers)
+
+    logger.info(f"Total OIDC providers: {provider_count}")
+    if provider_count / serviceQuotaValue > float(threshold) / 100:
+        sendQuotaThresholdEvent = True
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(provider_count), "", sendQuotaThresholdEvent)
+
+
+def L_19F2CF71(serviceCode, quotaCode, region, threshold):
+    """Checks MFA devices per user (max across all users)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxMfa = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        for user in page['Users']:
+            mfa_devices = iam_client.list_mfa_devices(UserName=user['UserName'])['MFADevices']
+            mfa_count = len(mfa_devices)
+            if mfa_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": user['Arn'], "usageValue": mfa_count})
+            if mfa_count > maxMfa:
+                maxMfa = mfa_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxMfa), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)
+
+
+def L_76C48054(serviceCode, quotaCode, region, threshold):
+    """Checks Signing certificates per user (max across all users)"""
+    sendQuotaThresholdEvent = False
+    iam_client = boto3.client('iam')
+    sq_client = boto3.client('service-quotas', region_name=region)
+    serviceQuota = sq_client.get_service_quota(ServiceCode=serviceCode, QuotaCode=quotaCode)
+    serviceQuotaValue = serviceQuota['Quota']['Value']
+
+    maxCerts = 0
+    resourceListCrossingThreshold = []
+    paginator = iam_client.get_paginator('list_users').paginate()
+    for page in paginator:
+        for user in page['Users']:
+            certs = iam_client.list_signing_certificates(UserName=user['UserName'])['Certificates']
+            cert_count = len(certs)
+            if cert_count / serviceQuotaValue > float(threshold) / 100:
+                sendQuotaThresholdEvent = True
+                resourceListCrossingThreshold.append({"resourceARN": user['Arn'], "usageValue": cert_count})
+            if cert_count > maxCerts:
+                maxCerts = cert_count
+
+    updateQuotaUsage(region, quotaCode, serviceCode, str(serviceQuotaValue), str(maxCerts), json.dumps(resourceListCrossingThreshold), sendQuotaThresholdEvent)

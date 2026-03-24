@@ -23,9 +23,9 @@ if not logger.handlers:
     logger.addHandler(handler)
 
 
-# Setup boto3 clients
-ec2 = boto3.client('ec2')
-sq = boto3.client('service-quotas')
+# Setup boto3 clients - not used in this module, commenting out to avoid region errors
+# ec2 = boto3.client('ec2')
+# sq = boto3.client('service-quotas')
 
 # CSV file path for quota usage (defaults to quota_usage.csv in current directory if not set)
 quota_csv_path = os.environ.get('QUOTA_CSV_PATH', 'quota_usage.csv')
