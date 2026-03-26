@@ -1,7 +1,7 @@
-2026-03-24 15:47:54,241 - root - INFO - Loading function
-2026-03-24 15:47:54,251 - root - INFO - Loading function
-2026-03-24 15:47:54,251 - root - INFO - Using region(s): ['us-west-2']
-2026-03-24 15:47:54,252 - root - INFO - Using the following config: [
+2026-03-26 15:32:12,117 - root - INFO - Loading function
+2026-03-26 15:32:12,118 - root - INFO - Loading function
+2026-03-26 15:32:12,119 - root - INFO - Using region(s): ['us-west-2']
+2026-03-26 15:32:12,119 - root - INFO - Using the following config: [
   {
     "ServiceCode": "ebs",
     "QuotaCode": "L-D18FCD1D",
@@ -99,92 +99,88 @@
     "Threshold": "80"
   }
 ]
-2026-03-24 15:47:54,252 - root - INFO - Processing: {'ServiceCode': 'ebs', 'QuotaCode': 'L-D18FCD1D', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:54,252 - root - INFO - Running function: L_D18FCD1D
-2026-03-24 15:47:54,259 - botocore.credentials - INFO - Found credentials in environment variables.
-2026-03-24 15:47:56,051 - root - INFO - Total (TiB) of general purpose SSD gp2 storage = 0.015625
-2026-03-24 15:47:56,055 - root - INFO - Updated quota usage in CSV file for ebs:L-D18FCD1D in region us-west-2
-2026-03-24 15:47:56,059 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-DF5E4CA3', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:56,059 - root - INFO - Running function: L_DF5E4CA3
-2026-03-24 15:47:56,544 - root - INFO - Updated quota usage in CSV file for vpc:L-DF5E4CA3 in region us-west-2
-2026-03-24 15:47:56,547 - root - INFO - Processing: {'ServiceCode': 'ec2', 'QuotaCode': 'L-43872EB7', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:56,547 - root - INFO - Running function: L_43872EB7
-2026-03-24 15:47:56,728 - root - INFO - 20.0
-2026-03-24 15:47:56,984 - root - INFO - TGW_IF=tgw-01c0165aaf2e13120. Number of Transit Gateway Route Tables=1
-2026-03-24 15:47:56,984 - root - INFO - Max value=1
-2026-03-24 15:47:57,072 - root - INFO - TGW_IF=tgw-082df98024aee9118. Number of Transit Gateway Route Tables=2
-2026-03-24 15:47:57,072 - root - INFO - Max value=2
-2026-03-24 15:47:57,074 - root - INFO - Updated quota usage in CSV file for ec2:L-43872EB7 in region us-west-2
-2026-03-24 15:47:57,078 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-1B52E74A', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:57,078 - root - INFO - Running function: L_1B52E74A
-2026-03-24 15:47:57,465 - root - INFO - Updated quota usage in CSV file for vpc:L-1B52E74A in region us-west-2
-2026-03-24 15:47:57,469 - root - INFO - Processing: {'ServiceCode': 'ec2', 'QuotaCode': 'L-C4B238BF', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:57,469 - root - INFO - Running function: L_C4B238BF
-2026-03-24 15:47:57,838 - root - INFO - Updated quota usage in CSV file for ec2:L-C4B238BF in region us-west-2
-2026-03-24 15:47:57,842 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-BB24F6E5', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:57,842 - root - INFO - Running function: L_BB24F6E5
-2026-03-24 15:47:58,009 - root - INFO - Network Address Usage (NAU) quota: 64000.0
-2026-03-24 15:47:58,454 - root - INFO - No NAU data available for VPC vpc-04781ec5fd3da201e
-2026-03-24 15:47:58,485 - root - INFO - No NAU data available for VPC vpc-00cbc7fa17a2e6b06
-2026-03-24 15:47:58,529 - root - INFO - No NAU data available for VPC vpc-03d8dfabb718cfba2
-2026-03-24 15:47:58,557 - root - INFO - No NAU data available for VPC vpc-09bc1311a79631fb1
-2026-03-24 15:47:58,600 - root - INFO - No NAU data available for VPC vpc-0bbf4e2d4a1eba3f7
-2026-03-24 15:47:58,604 - root - INFO - Updated quota usage in CSV file for vpc:L-BB24F6E5 in region us-west-2
-2026-03-24 15:47:58,611 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-DFA99DE7', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:58,611 - root - INFO - Running function: L_DFA99DE7
-2026-03-24 15:47:58,775 - root - INFO - Private IP addresses per NAT gateway quota: 8.0
-2026-03-24 15:47:58,966 - root - INFO - NAT Gateway nat-0f9f2e425facf283a: 1.0 private IPs used out of 8.0
-2026-03-24 15:47:58,966 - root - INFO - Max value=1.0
-2026-03-24 15:47:58,966 - root - INFO - NAT Gateway nat-02e57d46eb1499f5c: 1.0 private IPs used out of 8.0
-2026-03-24 15:47:58,968 - root - INFO - Updated quota usage in CSV file for vpc:L-DFA99DE7 in region us-west-2
-2026-03-24 15:47:58,972 - root - INFO - Processing: {'ServiceCode': 'elasticloadbalancing', 'QuotaCode': 'L-CE3125E5', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:47:58,973 - root - INFO - Running function: L_CE3125E5
-2026-03-24 15:48:00,719 - root - INFO - Number of instances behind each load balancer:
-2026-03-24 15:48:00,719 - root - INFO - VPCSer-Netwo-860MmRteIGic: 0 instances
-2026-03-24 15:48:00,719 - root - INFO - NLB-DualStack: 0 instances
-2026-03-24 15:48:00,719 - root - INFO - 
+2026-03-26 15:32:12,119 - root - INFO - Processing: {'ServiceCode': 'ebs', 'QuotaCode': 'L-D18FCD1D', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:12,119 - root - INFO - Running function: L_D18FCD1D
+2026-03-26 15:32:12,129 - botocore.credentials - INFO - Found credentials in environment variables.
+2026-03-26 15:32:13,034 - root - INFO - Total (TiB) of general purpose SSD gp2 storage = 0.015625
+2026-03-26 15:32:13,037 - root - INFO - Updated quota usage in CSV file for ebs:L-D18FCD1D in region us-west-2
+2026-03-26 15:32:13,040 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-DF5E4CA3', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:13,040 - root - INFO - Running function: L_DF5E4CA3
+2026-03-26 15:32:13,722 - root - INFO - Updated quota usage in CSV file for vpc:L-DF5E4CA3 in region us-west-2
+2026-03-26 15:32:13,725 - root - INFO - Processing: {'ServiceCode': 'ec2', 'QuotaCode': 'L-43872EB7', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:13,725 - root - INFO - Running function: L_43872EB7
+2026-03-26 15:32:13,866 - root - INFO - 20.0
+2026-03-26 15:32:14,096 - root - INFO - TGW_IF=tgw-01c0165aaf2e13120. Number of Transit Gateway Route Tables=1
+2026-03-26 15:32:14,096 - root - INFO - Max value=1
+2026-03-26 15:32:14,150 - root - INFO - TGW_IF=tgw-082df98024aee9118. Number of Transit Gateway Route Tables=2
+2026-03-26 15:32:14,151 - root - INFO - Max value=2
+2026-03-26 15:32:14,153 - root - INFO - Updated quota usage in CSV file for ec2:L-43872EB7 in region us-west-2
+2026-03-26 15:32:14,157 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-1B52E74A', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:14,158 - root - INFO - Running function: L_1B52E74A
+2026-03-26 15:32:14,503 - root - INFO - Updated quota usage in CSV file for vpc:L-1B52E74A in region us-west-2
+2026-03-26 15:32:14,507 - root - INFO - Processing: {'ServiceCode': 'ec2', 'QuotaCode': 'L-C4B238BF', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:14,507 - root - INFO - Running function: L_C4B238BF
+2026-03-26 15:32:14,920 - root - INFO - Updated quota usage in CSV file for ec2:L-C4B238BF in region us-west-2
+2026-03-26 15:32:14,924 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-BB24F6E5', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:14,924 - root - INFO - Running function: L_BB24F6E5
+2026-03-26 15:32:15,097 - root - INFO - Network Address Usage (NAU) quota: 64000.0
+2026-03-26 15:32:15,440 - root - INFO - No NAU data available for VPC vpc-04781ec5fd3da201e
+2026-03-26 15:32:15,473 - root - INFO - No NAU data available for VPC vpc-00cbc7fa17a2e6b06
+2026-03-26 15:32:15,506 - root - INFO - No NAU data available for VPC vpc-03d8dfabb718cfba2
+2026-03-26 15:32:15,556 - root - INFO - No NAU data available for VPC vpc-09bc1311a79631fb1
+2026-03-26 15:32:15,558 - root - INFO - Updated quota usage in CSV file for vpc:L-BB24F6E5 in region us-west-2
+2026-03-26 15:32:15,560 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-DFA99DE7', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:15,561 - root - INFO - Running function: L_DFA99DE7
+2026-03-26 15:32:15,705 - root - INFO - Private IP addresses per NAT gateway quota: 8.0
+2026-03-26 15:32:15,968 - root - INFO - NAT Gateway nat-02e57d46eb1499f5c: 1.0 private IPs used out of 8.0
+2026-03-26 15:32:15,968 - root - INFO - Max value=1.0
+2026-03-26 15:32:15,968 - root - INFO - NAT Gateway nat-0f9f2e425facf283a: 1.0 private IPs used out of 8.0
+2026-03-26 15:32:15,970 - root - INFO - Updated quota usage in CSV file for vpc:L-DFA99DE7 in region us-west-2
+2026-03-26 15:32:15,974 - root - INFO - Processing: {'ServiceCode': 'elasticloadbalancing', 'QuotaCode': 'L-CE3125E5', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:15,974 - root - INFO - Running function: L_CE3125E5
+2026-03-26 15:32:16,758 - root - INFO - Number of instances behind each load balancer:
+2026-03-26 15:32:16,759 - root - INFO - VPCSer-Netwo-860MmRteIGic: 0 instances
+2026-03-26 15:32:16,759 - root - INFO - NLB-DualStack: 0 instances
+2026-03-26 15:32:16,759 - root - INFO - 
 Total number of instances across all load balancers: 0
-2026-03-24 15:48:00,723 - root - INFO - Updated quota usage in CSV file for elasticloadbalancing:L-CE3125E5 in region us-west-2
-2026-03-24 15:48:00,730 - root - INFO - Processing: {'ServiceCode': 's3', 'QuotaCode': 'L-DC2B2D3D', 'QuotaAppliedAtLevel': 'Global', 'Threshold': '80'}
-2026-03-24 15:48:00,730 - root - INFO - Running function: L_DC2B2D3D
-2026-03-24 15:48:00,863 - root - ERROR - Error calling get_service_quota: An error occurred (NoSuchResourceException) when calling the GetServiceQuota operation: The request failed because the specified quota and service do not exist.
-2026-03-24 15:48:00,917 - root - ERROR - Error calling get_aws_default_service_quota for s3 and L-DC2B2D3D: An error occurred (NoSuchResourceException) when calling the GetAWSDefaultServiceQuota operation: 
-2026-03-24 15:48:00,921 - root - INFO - Processing: {'ServiceCode': 'iam', 'QuotaCode': 'L-0DA4ABF3', 'QuotaAppliedAtLevel': 'Global', 'Threshold': '80'}
-2026-03-24 15:48:00,921 - root - INFO - Running function: L_0DA4ABF3
-2026-03-24 15:48:01,070 - root - ERROR - Error processing quota L-0DA4ABF3 for region us-west-2: An error occurred (NoSuchResourceException) when calling the GetServiceQuota operation: The request failed because the specified quota and service do not exist.
-2026-03-24 15:48:01,071 - root - INFO - Continuing with next quota...
-2026-03-24 15:48:01,073 - root - INFO - Processing: {'ServiceCode': 'iam', 'QuotaCode': 'L-BF35879D', 'QuotaAppliedAtLevel': 'Global', 'Threshold': '80'}
-2026-03-24 15:48:01,073 - root - INFO - Running function: L_BF35879D
-2026-03-24 15:48:01,226 - root - ERROR - Error processing quota L-BF35879D for region us-west-2: An error occurred (NoSuchResourceException) when calling the GetServiceQuota operation: The request failed because the specified quota and service do not exist.
-2026-03-24 15:48:01,226 - root - INFO - Continuing with next quota...
-2026-03-24 15:48:01,229 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-CD17FD4B', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:48:01,229 - root - INFO - Running function: L_CD17FD4B
-2026-03-24 15:48:01,368 - root - INFO - Peered Network Address Usage (Peered NAU) quota: 128000.0
-2026-03-24 15:48:01,855 - root - INFO - No Peered NAU data available for VPC vpc-04781ec5fd3da201e
-2026-03-24 15:48:02,428 - root - INFO - No Peered NAU data available for VPC vpc-0bbf4e2d4a1eba3f7
-2026-03-24 15:48:02,432 - root - INFO - Updated quota usage in CSV file for vpc:L-CD17FD4B in region us-west-2
-2026-03-24 15:48:02,439 - root - INFO - Processing: {'ServiceCode': 'es', 'QuotaCode': 'L-6408ABDE', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:48:02,439 - root - INFO - Running function: L_6408ABDE
-2026-03-24 15:48:02,596 - root - INFO - Instances per domain for Elasticsearch quota: 200.0
-2026-03-24 15:48:02,885 - root - INFO - Updated quota usage in CSV file for es:L-6408ABDE in region us-west-2
-2026-03-24 15:48:02,890 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-7E9ECCDB', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:48:02,890 - root - INFO - Running function: L_7E9ECCDB
-2026-03-24 15:48:03,387 - root - INFO - VPC Id=vpc-04781ec5fd3da201e. Number of VpcPeeringConnections=1
-2026-03-24 15:48:03,387 - root - INFO - Max Value: 1
-2026-03-24 15:48:03,514 - root - INFO - VPC Id=vpc-00cbc7fa17a2e6b06. Number of VpcPeeringConnections=0
-2026-03-24 15:48:03,633 - root - INFO - VPC Id=vpc-03d8dfabb718cfba2. Number of VpcPeeringConnections=0
-2026-03-24 15:48:03,756 - root - INFO - VPC Id=vpc-09bc1311a79631fb1. Number of VpcPeeringConnections=0
-2026-03-24 15:48:03,905 - root - INFO - VPC Id=vpc-0bbf4e2d4a1eba3f7. Number of VpcPeeringConnections=1
-2026-03-24 15:48:03,909 - root - INFO - Updated quota usage in CSV file for vpc:L-7E9ECCDB in region us-west-2
-2026-03-24 15:48:03,914 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-407747CB', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:48:03,914 - root - INFO - Running function: L_407747CB
-2026-03-24 15:48:04,380 - root - INFO - VPC Id=vpc-04781ec5fd3da201e. Number of Subnets=5
-2026-03-24 15:48:04,381 - root - INFO - Max Value: 5
-2026-03-24 15:48:04,502 - root - INFO - VPC Id=vpc-00cbc7fa17a2e6b06. Number of Subnets=4
-2026-03-24 15:48:04,660 - root - INFO - VPC Id=vpc-03d8dfabb718cfba2. Number of Subnets=5
-2026-03-24 15:48:04,787 - root - INFO - VPC Id=vpc-09bc1311a79631fb1. Number of Subnets=4
-2026-03-24 15:48:04,921 - root - INFO - VPC Id=vpc-0bbf4e2d4a1eba3f7. Number of Subnets=4
-2026-03-24 15:48:04,923 - root - INFO - Updated quota usage in CSV file for vpc:L-407747CB in region us-west-2
-2026-03-24 15:48:04,926 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-45FE3B85', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
-2026-03-24 15:48:04,927 - root - INFO - Running function: L_45FE3B85
-2026-03-24 15:48:06,208 - root - INFO - Updated quota usage in CSV file for vpc:L-45FE3B85 in region us-west-2
+2026-03-26 15:32:16,763 - root - INFO - Updated quota usage in CSV file for elasticloadbalancing:L-CE3125E5 in region us-west-2
+2026-03-26 15:32:16,769 - root - INFO - Processing: {'ServiceCode': 's3', 'QuotaCode': 'L-DC2B2D3D', 'QuotaAppliedAtLevel': 'Global', 'Threshold': '80'}
+2026-03-26 15:32:16,769 - root - INFO - Running function: L_DC2B2D3D
+2026-03-26 15:32:16,920 - root - ERROR - Error calling get_service_quota: An error occurred (NoSuchResourceException) when calling the GetServiceQuota operation: The request failed because the specified quota and service do not exist.
+2026-03-26 15:32:16,978 - root - ERROR - Error calling get_aws_default_service_quota for s3 and L-DC2B2D3D: An error occurred (NoSuchResourceException) when calling the GetAWSDefaultServiceQuota operation: 
+2026-03-26 15:32:16,981 - root - INFO - Processing: {'ServiceCode': 'iam', 'QuotaCode': 'L-0DA4ABF3', 'QuotaAppliedAtLevel': 'Global', 'Threshold': '80'}
+2026-03-26 15:32:16,981 - root - INFO - Running function: L_0DA4ABF3
+2026-03-26 15:32:18,116 - root - ERROR - Error processing quota L-0DA4ABF3 for region us-west-2: An error occurred (NoSuchResourceException) when calling the GetServiceQuota operation: The request failed because the specified quota and service do not exist.
+2026-03-26 15:32:18,116 - root - INFO - Continuing with next quota...
+2026-03-26 15:32:18,118 - root - INFO - Processing: {'ServiceCode': 'iam', 'QuotaCode': 'L-BF35879D', 'QuotaAppliedAtLevel': 'Global', 'Threshold': '80'}
+2026-03-26 15:32:18,118 - root - INFO - Running function: L_BF35879D
+2026-03-26 15:32:18,245 - root - ERROR - Error processing quota L-BF35879D for region us-west-2: An error occurred (NoSuchResourceException) when calling the GetServiceQuota operation: The request failed because the specified quota and service do not exist.
+2026-03-26 15:32:18,245 - root - INFO - Continuing with next quota...
+2026-03-26 15:32:18,247 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-CD17FD4B', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:18,247 - root - INFO - Running function: L_CD17FD4B
+2026-03-26 15:32:18,384 - root - INFO - Peered Network Address Usage (Peered NAU) quota: 128000.0
+2026-03-26 15:32:18,869 - root - INFO - No Peered NAU data available for VPC vpc-04781ec5fd3da201e
+2026-03-26 15:32:19,366 - root - INFO - Updated quota usage in CSV file for vpc:L-CD17FD4B in region us-west-2
+2026-03-26 15:32:19,373 - root - INFO - Processing: {'ServiceCode': 'es', 'QuotaCode': 'L-6408ABDE', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:19,373 - root - INFO - Running function: L_6408ABDE
+2026-03-26 15:32:19,517 - root - INFO - Instances per domain for Elasticsearch quota: 200.0
+2026-03-26 15:32:19,811 - root - INFO - Updated quota usage in CSV file for es:L-6408ABDE in region us-west-2
+2026-03-26 15:32:19,815 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-7E9ECCDB', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:19,815 - root - INFO - Running function: L_7E9ECCDB
+2026-03-26 15:32:20,240 - root - INFO - VPC Id=vpc-04781ec5fd3da201e. Number of VpcPeeringConnections=1
+2026-03-26 15:32:20,240 - root - INFO - Max Value: 1
+2026-03-26 15:32:20,356 - root - INFO - VPC Id=vpc-00cbc7fa17a2e6b06. Number of VpcPeeringConnections=0
+2026-03-26 15:32:20,481 - root - INFO - VPC Id=vpc-03d8dfabb718cfba2. Number of VpcPeeringConnections=0
+2026-03-26 15:32:20,645 - root - INFO - VPC Id=vpc-09bc1311a79631fb1. Number of VpcPeeringConnections=0
+2026-03-26 15:32:20,648 - root - INFO - Updated quota usage in CSV file for vpc:L-7E9ECCDB in region us-west-2
+2026-03-26 15:32:20,653 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-407747CB', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:20,653 - root - INFO - Running function: L_407747CB
+2026-03-26 15:32:21,077 - root - INFO - VPC Id=vpc-04781ec5fd3da201e. Number of Subnets=5
+2026-03-26 15:32:21,077 - root - INFO - Max Value: 5
+2026-03-26 15:32:21,167 - root - INFO - VPC Id=vpc-00cbc7fa17a2e6b06. Number of Subnets=4
+2026-03-26 15:32:21,255 - root - INFO - VPC Id=vpc-03d8dfabb718cfba2. Number of Subnets=5
+2026-03-26 15:32:21,322 - root - INFO - VPC Id=vpc-09bc1311a79631fb1. Number of Subnets=4
+2026-03-26 15:32:21,327 - root - INFO - Updated quota usage in CSV file for vpc:L-407747CB in region us-west-2
+2026-03-26 15:32:21,331 - root - INFO - Processing: {'ServiceCode': 'vpc', 'QuotaCode': 'L-45FE3B85', 'QuotaAppliedAtLevel': 'Regional', 'Threshold': '80'}
+2026-03-26 15:32:21,331 - root - INFO - Running function: L_45FE3B85
+2026-03-26 15:32:21,652 - root - INFO - Updated quota usage in CSV file for vpc:L-45FE3B85 in region us-west-2

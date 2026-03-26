@@ -35,62 +35,69 @@ echo "Quota Usage File: $QUOTA_USAGE_FILE"
 echo "Output File: $OUTPUT_FILE"
 echo ""
 
-# Create a temporary associative array file for usage data
-# quota_usage.csv columns: QuotaCode,ServiceCode,Region,LimitValue,UsageValue,ResourceList,Timestamp
-TEMP_USAGE_MAP=$(mktemp)
+# Use Python for proper CSV parsing (handles commas inside quoted fields)
+python3 - "$SERVICE_QUOTAS_FILE" "$QUOTA_USAGE_FILE" "$OUTPUT_FILE" << 'PYEOF'
+import csv
+import sys
 
-tail -n +2 "$QUOTA_USAGE_FILE" | while IFS=',' read -r quota_code service_code region limit_value usage_value resource_list timestamp; do
-    quota_code=$(echo "$quota_code" | tr -d '"')
-    service_code=$(echo "$service_code" | tr -d '"')
-    region=$(echo "$region" | tr -d '"')
-    usage_value=$(echo "$usage_value" | tr -d '"')
+service_quotas_file = sys.argv[1]
+quota_usage_file = sys.argv[2]
+output_file = sys.argv[3]
 
-    key="${quota_code}|${service_code}|${region}"
-    echo "$key=$usage_value" >> "$TEMP_USAGE_MAP"
-done
+# Build lookup from quota_usage.csv
+# Columns: QuotaCode,ServiceCode,Region,LimitValue,UsageValue,ResourceList,Timestamp
+usage_map = {}
+with open(quota_usage_file, newline='') as f:
+    reader = csv.reader(f)
+    header = next(reader)
+    for row in reader:
+        if len(row) >= 5:
+            quota_code, service_code, region = row[0], row[1], row[2]
+            usage_value = row[4]
+            key = f"{quota_code}|{service_code}|{region}"
+            usage_map[key] = usage_value
 
-# Write header to output file
-head -n 1 "$SERVICE_QUOTAS_FILE" > "$OUTPUT_FILE"
+# Process service_quotas CSV and merge usage data
+# Columns: accountId,region,serviceCode,quotaCode,quotaName,quotaValue,defaultValue,adjustable,usageValue,usagePct
+updated_count = 0
+total_rows = 0
 
-# service_quotas CSV columns:
-# accountId,region,serviceCode,quotaCode,quotaName,quotaValue,defaultValue,adjustable,usageValue,usagePct
-TEMP_UPDATED_COUNT=$(mktemp)
-echo "0" > "$TEMP_UPDATED_COUNT"
+with open(service_quotas_file, newline='') as infile, open(output_file, 'w', newline='') as outfile:
+    reader = csv.reader(infile)
+    writer = csv.writer(outfile, quoting=csv.QUOTE_ALL)
 
-tail -n +2 "$SERVICE_QUOTAS_FILE" | while IFS=',' read -r account_id region service_code quota_code quota_name quota_value default_value adjustable usage_value usage_pct; do
-    account_id=$(echo "$account_id" | tr -d '"')
-    region=$(echo "$region" | tr -d '"')
-    service_code=$(echo "$service_code" | tr -d '"')
-    quota_code=$(echo "$quota_code" | tr -d '"')
-    quota_name=$(echo "$quota_name" | tr -d '"')
-    quota_value=$(echo "$quota_value" | tr -d '"')
-    default_value=$(echo "$default_value" | tr -d '"')
-    adjustable=$(echo "$adjustable" | tr -d '"')
-    usage_value=$(echo "$usage_value" | tr -d '"')
-    usage_pct=$(echo "$usage_pct" | tr -d '"')
+    header = next(reader)
+    writer.writerow(header)
 
-    key="${quota_code}|${service_code}|${region}"
-    lookup=$(grep "^${key}=" "$TEMP_USAGE_MAP" 2>/dev/null | head -n 1 | cut -d'=' -f2)
+    for row in reader:
+        total_rows += 1
+        if len(row) < 10:
+            # Pad short rows
+            row.extend([''] * (10 - len(row)))
 
-    if [ -n "$lookup" ]; then
-        usage_value="$lookup"
-        # Recalculate usage percentage
-        if [ -n "$quota_value" ] && [ "$quota_value" != "0" ] && [ "$quota_value" != "0.0" ]; then
-            usage_pct=$(echo "scale=2; $usage_value / $quota_value * 100" | bc 2>/dev/null || echo "")
-        else
-            usage_pct=""
-        fi
-        count=$(cat "$TEMP_UPDATED_COUNT")
-        echo "$((count + 1))" > "$TEMP_UPDATED_COUNT"
-    fi
+        account_id, region, service_code, quota_code = row[0], row[1], row[2], row[3]
+        quota_name, quota_value, default_value, adjustable = row[4], row[5], row[6], row[7]
+        usage_value, usage_pct = row[8], row[9]
 
-    echo "\"$account_id\",\"$region\",\"$service_code\",\"$quota_code\",\"$quota_name\",\"$quota_value\",\"$default_value\",\"$adjustable\",\"$usage_value\",\"$usage_pct\"" >> "$OUTPUT_FILE"
-done
+        key = f"{quota_code}|{service_code}|{region}"
+        if key in usage_map:
+            usage_value = usage_map[key]
+            # Recalculate usage percentage
+            try:
+                qv = float(quota_value)
+                if qv > 0:
+                    usage_pct = f"{float(usage_value) / qv * 100:.2f}"
+                else:
+                    usage_pct = ""
+            except (ValueError, ZeroDivisionError):
+                usage_pct = ""
+            updated_count += 1
 
-# Clean up
-updated=$(cat "$TEMP_UPDATED_COUNT")
-rm -f "$TEMP_USAGE_MAP"
-rm -f "$TEMP_UPDATED_COUNT"
+        writer.writerow([account_id, region, service_code, quota_code, quota_name,
+                         quota_value, default_value, adjustable, usage_value, usage_pct])
+
+print(f"RESULT:{total_rows}:{updated_count}")
+PYEOF
 
 echo ""
 echo "Merge complete!"
@@ -99,4 +106,3 @@ echo ""
 echo "Summary:"
 total_rows=$(($(wc -l < "$OUTPUT_FILE") - 1))
 echo "  Total quotas processed: $total_rows"
-echo "  Quotas updated with usage data: $updated"
