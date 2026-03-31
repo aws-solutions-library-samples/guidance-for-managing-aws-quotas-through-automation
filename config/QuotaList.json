@@ -40,7 +40,7 @@
         "QuotaCode": "L-DFA99DE7",
         "QuotaAppliedAtLevel" : "Regional",
         "Threshold" : "80"
-    }, 
+    },
     {
         "ServiceCode":"elasticloadbalancing",
         "QuotaCode": "L-CE3125E5",
@@ -67,7 +67,7 @@
     },
     {
         "ServiceCode": "vpc",
-        "QuotaCode": "L-CD17FD4B", 
+        "QuotaCode": "L-CD17FD4B",
         "QuotaAppliedAtLevel": "Regional",
         "Threshold": "80"
     },
@@ -93,6 +93,297 @@
         "ServiceCode": "vpc",
         "QuotaCode": "L-45FE3B85",
         "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-254CACF4",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-79E773B3",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-2DC80978",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-A50569E5",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-AD41C330",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-8CE99163",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-F457545D",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-1D3E59A3",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-FF8B4E28",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-479B647F",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-9072D6F0",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-01F3CD81",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-124DCF3D",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-CFCAAB0E",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-9F4DB459",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "bedrock",
+        "QuotaCode": "L-893F8BF9",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+
+    {
+        "ServiceCode": "elasticmapreduce",
+        "QuotaCode": "L-D74118B4",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "elasticmapreduce",
+        "QuotaCode": "L-283CCA2A",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "elasticmapreduce",
+        "QuotaCode": "L-81AF5123",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "elasticmapreduce",
+        "QuotaCode": "L-432FAB44",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "elasticmapreduce",
+        "QuotaCode": "L-72BCD5B1",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "elasticmapreduce",
+        "QuotaCode": "L-B810434D",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "events",
+        "QuotaCode": "L-5540C5E3",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "events",
+        "QuotaCode": "L-9B653E91",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "monitoring",
+        "QuotaCode": "L-05D334F0",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "monitoring",
+        "QuotaCode": "L-5E141212",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "monitoring",
+        "QuotaCode": "L-EE839489",
+        "QuotaAppliedAtLevel": "Regional",
+        "Threshold": "80"
+    },
+
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-F55AF5E4",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-FC9EC213",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-C07B4B0D",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-3AD47CAE",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-F4A5425F",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-8E23FFD8",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-ED111B8C",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-6E65F664",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-4019AD8B",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-B39FB15B",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-FE177D64",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-F1176D35",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-C4DF001E",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-E95E4862",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-DB618D39",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-384571C4",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-8758042E",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-7A1621EC",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-858F3967",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-19F2CF71",
+        "QuotaAppliedAtLevel": "Global",
+        "Threshold": "80"
+    },
+    {
+        "ServiceCode": "iam",
+        "QuotaCode": "L-76C48054",
+        "QuotaAppliedAtLevel": "Global",
         "Threshold": "80"
     }
 ]
