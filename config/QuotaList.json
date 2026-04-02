@@ -40,7 +40,7 @@
         "QuotaCode": "L-DFA99DE7",
         "QuotaAppliedAtLevel" : "Regional",
         "Threshold" : "80"
-    }, 
+    },
     {
         "ServiceCode":"elasticloadbalancing",
         "QuotaCode": "L-CE3125E5",
@@ -67,7 +67,7 @@
     },
     {
         "ServiceCode": "vpc",
-        "QuotaCode": "L-CD17FD4B", 
+        "QuotaCode": "L-CD17FD4B",
         "QuotaAppliedAtLevel": "Regional",
         "Threshold": "80"
     },
